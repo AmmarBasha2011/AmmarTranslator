@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Copy, ArrowRightLeft, Sparkles, X, AlertTriangle, CheckCircle2, Volume2, Mic, MicOff } from 'lucide-react';
+import { Copy, ArrowRightLeft, Sparkles, X, AlertTriangle, CheckCircle2, Volume2, Mic, MicOff, Globe } from 'lucide-react';
 import { translateToArabicToAmmar, translateAmmarToArabic } from '../services/translator';
 import { validateInput, ValidationError } from '../services/validator';
 import { isArabicText } from '../constants';
 import { cn } from '../lib/utils';
 import { useTextToSpeech } from '../hooks/useTextToSpeech';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
+import { translateText } from '../services/gemini';
 
 export default function TranslatorView() {
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
-  const [direction, setDirection] = useState<'auto' | 'ar-to-am' | 'am-to-ar'>('auto');
-  const [detectedDirection, setDetectedDirection] = useState<'ar-to-am' | 'am-to-ar'>('ar-to-am');
+  const [direction, setDirection] = useState<'auto' | 'ar-to-am' | 'am-to-ar' | 'en-to-am' | 'am-to-en'>('auto');
+  const [detectedDirection, setDetectedDirection] = useState<'ar-to-am' | 'am-to-ar' | 'en-to-am' | 'am-to-en'>('ar-to-am');
   const [copied, setCopied] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   const { speak, stop: stopSpeaking, isSpeaking } = useTextToSpeech();
   
@@ -29,7 +31,7 @@ export default function TranslatorView() {
 
   // Debounce translation and validation
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       if (!inputText.trim()) {
         setOutputText('');
         setValidationErrors([]);
@@ -44,18 +46,39 @@ export default function TranslatorView() {
       
       if (direction === 'auto') {
         const isAr = isArabicText(inputText);
+        // Default auto only detects Arabic vs Ammar for now to avoid confusion with English
         currentDirection = isAr ? 'ar-to-am' : 'am-to-ar';
-        setDetectedDirection(currentDirection);
+        setDetectedDirection(currentDirection as any);
       } else {
-        setDetectedDirection(direction);
+        setDetectedDirection(direction as any);
       }
 
-      if (currentDirection === 'ar-to-am') {
-        setOutputText(translateToArabicToAmmar(inputText));
-      } else {
-        setOutputText(translateAmmarToArabic(inputText));
+      setIsTranslating(true);
+      try {
+        if (currentDirection === 'ar-to-am') {
+          setOutputText(translateToArabicToAmmar(inputText));
+        } else if (currentDirection === 'am-to-ar') {
+          setOutputText(translateAmmarToArabic(inputText));
+        } else if (currentDirection === 'en-to-am') {
+          // English -> Arabic -> Ammar
+          const arabic = await translateText(inputText, 'en', 'ar');
+          if (arabic) {
+            setOutputText(translateToArabicToAmmar(arabic));
+          }
+        } else if (currentDirection === 'am-to-en') {
+          // Ammar -> Arabic -> English
+          const arabic = translateAmmarToArabic(inputText);
+          const english = await translateText(arabic, 'ar', 'en');
+          if (english) {
+            setOutputText(english);
+          }
+        }
+      } catch (e) {
+        console.error("Translation failed", e);
+      } finally {
+        setIsTranslating(false);
       }
-    }, 200); // 200ms debounce
+    }, 500); // Increased debounce for API calls
 
     return () => clearTimeout(timer);
   }, [inputText, direction]);
@@ -68,13 +91,12 @@ export default function TranslatorView() {
   };
 
   const toggleDirection = () => {
-    if (direction === 'auto') {
-      setDirection('ar-to-am');
-    } else if (direction === 'ar-to-am') {
-      setDirection('am-to-ar');
-    } else {
-      setDirection('auto');
-    }
+    // Cycle through modes
+    if (direction === 'auto') setDirection('ar-to-am');
+    else if (direction === 'ar-to-am') setDirection('am-to-ar');
+    else if (direction === 'am-to-ar') setDirection('en-to-am');
+    else if (direction === 'en-to-am') setDirection('am-to-en');
+    else setDirection('auto');
   };
 
   const applySuggestion = (error: ValidationError) => {
@@ -87,7 +109,10 @@ export default function TranslatorView() {
     if (isSpeaking) {
       stopSpeaking();
     } else {
-      const lang = detectedDirection === 'ar-to-am' ? 'ar' : 'am';
+      let lang = 'ar';
+      if (detectedDirection === 'am-to-ar' || detectedDirection === 'am-to-en') lang = 'am'; // Custom handling for Ammar?
+      else if (detectedDirection === 'en-to-am') lang = 'en';
+      
       speak(inputText, lang);
     }
   };
@@ -96,7 +121,10 @@ export default function TranslatorView() {
     if (isSpeaking) {
       stopSpeaking();
     } else {
-      const lang = detectedDirection === 'ar-to-am' ? 'am' : 'ar';
+      let lang = 'ar';
+      if (detectedDirection === 'ar-to-am' || detectedDirection === 'en-to-am') lang = 'am';
+      else if (detectedDirection === 'am-to-en') lang = 'en';
+      
       speak(outputText, lang);
     }
   };
@@ -112,8 +140,8 @@ export default function TranslatorView() {
   return (
     <div className="flex flex-col gap-4 pb-24">
       {/* Controls */}
-      <div className="flex items-center justify-between px-2">
-        <div className="flex items-center gap-2 text-sm font-medium text-slate-300 bg-deep-blue-900/50 p-1 rounded-lg border border-white/5">
+      <div className="flex items-center justify-between px-2 overflow-x-auto">
+        <div className="flex items-center gap-2 text-sm font-medium text-slate-300 bg-deep-blue-900/50 p-1 rounded-lg border border-white/5 whitespace-nowrap">
           <button 
             onClick={() => setDirection('auto')}
             className={cn(
@@ -124,18 +152,46 @@ export default function TranslatorView() {
             Auto
           </button>
           <div className="w-px h-4 bg-white/10" />
-          <span className={cn("px-2 transition-colors", detectedDirection === 'ar-to-am' ? "text-neon-cyan" : "text-slate-500")}>
-            Arabic
-          </span>
+          
           <button 
-            onClick={toggleDirection}
-            className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+            onClick={() => setDirection('ar-to-am')}
+            className={cn(
+              "px-3 py-1.5 rounded-md transition-all",
+              direction === 'ar-to-am' ? "bg-neon-blue/20 text-neon-blue shadow-sm" : "hover:text-white hover:bg-white/5"
+            )}
           >
-            <ArrowRightLeft size={14} className="text-slate-400" />
+            Ar <ArrowRightLeft size={12} className="inline mx-1" /> Am
           </button>
-          <span className={cn("px-2 transition-colors", detectedDirection === 'am-to-ar' ? "text-neon-cyan" : "text-slate-500")}>
-            Ammar
-          </span>
+
+          <button 
+            onClick={() => setDirection('am-to-ar')}
+            className={cn(
+              "px-3 py-1.5 rounded-md transition-all",
+              direction === 'am-to-ar' ? "bg-neon-blue/20 text-neon-blue shadow-sm" : "hover:text-white hover:bg-white/5"
+            )}
+          >
+            Am <ArrowRightLeft size={12} className="inline mx-1" /> Ar
+          </button>
+
+          <button 
+            onClick={() => setDirection('en-to-am')}
+            className={cn(
+              "px-3 py-1.5 rounded-md transition-all",
+              direction === 'en-to-am' ? "bg-neon-blue/20 text-neon-blue shadow-sm" : "hover:text-white hover:bg-white/5"
+            )}
+          >
+            En <ArrowRightLeft size={12} className="inline mx-1" /> Am
+          </button>
+
+          <button 
+            onClick={() => setDirection('am-to-en')}
+            className={cn(
+              "px-3 py-1.5 rounded-md transition-all",
+              direction === 'am-to-en' ? "bg-neon-blue/20 text-neon-blue shadow-sm" : "hover:text-white hover:bg-white/5"
+            )}
+          >
+            Am <ArrowRightLeft size={12} className="inline mx-1" /> En
+          </button>
         </div>
       </div>
 

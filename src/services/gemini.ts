@@ -3,11 +3,11 @@ import { translateToArabicToAmmar } from "./translator";
 
 // Initialize with a placeholder or process.env if available.
 // We will re-initialize before calls if needed or rely on the environment variable.
-const apiKey = process.env.GEMINI_API_KEY || '';
 let ai: GoogleGenAI | null = null;
 
 function getAI() {
   if (!ai) {
+    const apiKey = process.env.GEMINI_API_KEY || '';
     ai = new GoogleGenAI({ apiKey });
   }
   return ai;
@@ -143,5 +143,23 @@ export async function generateFlashcards(level: 'beginner' | 'intermediate' | 'a
   } catch (error) {
     console.error("Error generating flashcards:", error);
     return [];
+  }
+}
+
+export async function translateText(text: string, from: 'en' | 'ar', to: 'en' | 'ar'): Promise<string> {
+  const prompt = `Translate the following text from ${from === 'en' ? 'English' : 'Arabic'} to ${to === 'en' ? 'English' : 'Arabic'}.
+  IMPORTANT: Return ONLY the translated text. Do not add any explanations, notes, or quotes.
+  
+  Text: "${text}"`;
+
+  try {
+    const response = await getAI().models.generateContent({
+      model: MODEL_NAME,
+      contents: prompt,
+    });
+    return response.text?.trim() || '';
+  } catch (error) {
+    console.error("Translation error:", error);
+    return '';
   }
 }

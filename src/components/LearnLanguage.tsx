@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Layers, HelpCircle, Sparkles, Loader2, WifiOff, AlertTriangle, Keyboard, Copy, Check } from 'lucide-react';
+import { BookOpen, Layers, HelpCircle, Sparkles, Loader2, WifiOff, AlertTriangle, Keyboard, Copy, Check, FileText, Code } from 'lucide-react';
 import { ARABIC_TO_AMMAR, MAX_CHARS, MIX_CHARS, VOWEL_CHARS } from '../constants';
 import Flashcards from './Flashcards';
 import Quiz from './Quiz';
@@ -28,7 +28,7 @@ Ṯ̶Z̊S̊ŞMNO
 OK_Layout_End`;
 
 export default function LearnLanguage() {
-  const [activeTab, setActiveTab] = useState<'guide' | 'flashcards' | 'quiz' | 'keyboard'>('guide');
+  const [activeTab, setActiveTab] = useState<'guide' | 'flashcards' | 'quiz' | 'keyboard' | 'docs'>('guide');
   const [level, setLevel] = useState<'beginner' | 'intermediate' | 'advanced' | 'extreme'>('beginner');
   const [count, setCount] = useState(5);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -159,6 +159,15 @@ export default function LearnLanguage() {
           >
             <Keyboard size={16} />
             Keyboard
+          </button>
+          <button
+            onClick={() => setActiveTab('docs')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+              activeTab === 'docs' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <FileText size={16} />
+            Docs
           </button>
         </div>
 
@@ -519,6 +528,62 @@ export default function LearnLanguage() {
               <p className="text-sm text-slate-400 mt-4">
                 <span className="text-neon-cyan font-bold">Instructions:</span> Copy this code and paste it into the DIY settings inside the Multiling O Keyboard app to get the original Ammar layout.
               </p>
+            </section>
+          </motion.div>
+        )}
+
+        {activeTab === 'docs' && (
+          <motion.div
+            key="docs"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <section className="bg-deep-blue-900/50 rounded-2xl border border-white/10 p-6">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <Code className="text-neon-cyan" />
+                Translation API
+              </h3>
+              <p className="text-slate-300 mb-6">
+                The Ammar Translator provides a public API that you can use to integrate translations into your own applications.
+              </p>
+
+              <div className="space-y-6">
+                <div className="bg-black/30 rounded-xl border border-white/5 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-2 py-1 rounded bg-green-500/20 text-green-400 text-xs font-bold font-mono">GET</span>
+                    <code className="text-sm text-white font-mono">/api/translate</code>
+                  </div>
+                  <p className="text-sm text-slate-400 mb-4">Translate text between English, Arabic, and Ammar.</p>
+                  
+                  <h4 className="text-sm font-bold text-slate-300 mb-2">Query Parameters</h4>
+                  <ul className="space-y-2 text-sm text-slate-400 font-mono">
+                    <li><span className="text-neon-blue">text</span> (required): The text to translate.</li>
+                    <li><span className="text-neon-blue">from</span> (required): Source language code (<span className="text-white">en</span>, <span className="text-white">ar</span>, <span className="text-white">am</span>).</li>
+                    <li><span className="text-neon-blue">to</span> (required): Target language code (<span className="text-white">en</span>, <span className="text-white">ar</span>, <span className="text-white">am</span>).</li>
+                  </ul>
+                </div>
+
+                <div className="bg-black/30 rounded-xl border border-white/5 p-4">
+                  <h4 className="text-sm font-bold text-slate-300 mb-2">Example Request</h4>
+                  <div className="bg-deep-blue-950 p-3 rounded-lg font-mono text-xs text-slate-300 overflow-x-auto">
+                    curl "https://{window.location.host}/api/translate?text=Hello&from=en&to=am"
+                  </div>
+                </div>
+
+                <div className="bg-black/30 rounded-xl border border-white/5 p-4">
+                  <h4 className="text-sm font-bold text-slate-300 mb-2">Example Response</h4>
+                  <div className="bg-deep-blue-950 p-3 rounded-lg font-mono text-xs text-green-400 overflow-x-auto">
+{`{
+  "text": "Hello",
+  "translated": "mtaᵃ̊hlwa",
+  "from": "en",
+  "to": "am"
+}`}
+                  </div>
+                </div>
+              </div>
             </section>
           </motion.div>
         )}

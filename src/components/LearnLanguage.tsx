@@ -9,13 +9,10 @@ import { generateQuiz, generateFlashcards, QuizQuestion, Flashcard } from '../se
 
 const KEYBOARD_LAYOUT = `OK_Layout_Begin
 1234567890
-f̱WaᵃrTYåxoH
-bsdfgH̅H̱kL
-zşs̊z̊mN.
+i o å a b T s̊ g H̅ H̱
+d z̊ r z s ş s̶̊ s̶ Ṯ Ṯ̶
+aᵃ aᵃ̊ f f̱ k L M N H w Y
 !@#$%^&*()
-f̱Waᵃ̊rṮYåxoH
-bs̶̊s̶fgH̅H̱kL
-Ṯ̶z̊s̊şmN,
 £¥€$₹^&*()№√÷
 ~\`{}%_-=|+§∷‡
 @[]#/\'"«»—‐–

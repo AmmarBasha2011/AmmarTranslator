@@ -32,7 +32,7 @@ export const MIX_CHARS = new Set([
 // Mapping: Arabic -> Ammar
 export const ARABIC_TO_AMMAR: Record<string, string> = {
   'ا': 'a',
-  'ى': 'a',
+  'ى': 'i', // Mapped to 'i' as per user list
   'أ': 'a' + MOD_YOGHASHAK,
   'إ': 'a' + MOD_YOGHASHAK,
   'آ': 'a' + MOD_YOGHASHAK,
@@ -54,27 +54,27 @@ export const ARABIC_TO_AMMAR: Record<string, string> = {
   'ص': 's' + MOD_DOUBLE + MOD_YOGHASHAK,
   'ض': 's' + MOD_DOUBLE,
   'ط': 'T' + MOD_MULTI,
-  'ظ': 'T' + MOD_DOUBLE + MOD_MULTI,
+  'ظ': 'T' + MOD_DOUBLE + MOD_MULTI, // T + double + multi
   'ع': 'a' + MOD_TIKRAR,
   'غ': 'a' + MOD_TIKRAR + MOD_YOGHASHAK,
   'ف': 'f',
   'ق': 'f' + MOD_MULTI,
   'ك': 'k',
   'ل': 'L',
-  'م': 'm',
-  'ن': 'n',
+  'م': 'M',
+  'ن': 'N',
   'ه': 'H',
   'ة': 'o',
-  'و': 'W',
+  'و': 'w',
   'ي': 'Y',
-  // Common symbols to ignore or pass through could be handled in logic
 };
 
 // Mapping: Ammar -> Arabic (Reverse)
 // We need to be careful with greedy matching.
 // We will sort keys by length descending in the translation logic.
 export const AMMAR_TO_ARABIC_MAP: Record<string, string[]> = {
-  'a': ['ا', 'ى'],
+  'a': ['ا'],
+  'i': ['ى'],
   ['a' + MOD_YOGHASHAK]: ['أ', 'إ', 'آ', 'ء', 'ؤ', 'ئ'],
   'b': ['ب'],
   'T': ['ت'],
@@ -98,27 +98,21 @@ export const AMMAR_TO_ARABIC_MAP: Record<string, string[]> = {
   ['f' + MOD_MULTI]: ['ق'],
   'k': ['ك'],
   'L': ['ل'],
-  'm': ['م'],
-  'n': ['ن'],
-  'H': ['ه'],
-  'h': ['ه'], // Support lowercase h input
-  'o': ['ة'],
-  'W': ['و'],
-  'Y': ['ي'],
-  // Case insensitivity handling:
-  't': ['ت'],
-  'G': ['ج'],
-  'D': ['د'],
-  'R': ['ر'],
-  'Z': ['ز'],
-  'S': ['س'],
-  'F': ['ف'],
-  'K': ['ك'],
-  'l': ['ل'],
   'M': ['م'],
   'N': ['ن'],
-  'O': ['ة'],
+  'H': ['ه'],
+  'o': ['ة'],
   'w': ['و'],
+  'u': ['و'], // Added for 'mu' prefix handling
+  'Y': ['ي'],
+  
+  // Legacy/Fallback support for casing (if user types wrong case)
+  't': ['ت'],
+  'l': ['ل'],
+  'm': ['م'],
+  'n': ['ن'],
+  'h': ['ه'],
+  'W': ['و'],
   'y': ['ي'],
 };
 
@@ -131,7 +125,7 @@ export const COMMON_WORDS = new Set([
 ]);
 
 // Vowel Characters (Rule: Add 'mt' prefix if present)
-export const VOWEL_CHARS = new Set(['أ', 'ا', 'ة', 'ع', 'غ', 'إ', 'آ', 'ء', 'ؤ', 'ئ']);
+export const VOWEL_CHARS = new Set(['أ', 'ا', 'ة', 'ع', 'غ', 'إ', 'آ', 'ء', 'ؤ', 'ئ', 'ى']);
 
 // Helper to check if a character is Arabic
 export function isArabicChar(char: string): boolean {

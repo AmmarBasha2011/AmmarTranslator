@@ -38,7 +38,7 @@ export async function generateQuiz(level: 'beginner' | 'intermediate' | 'advance
   Level: ${level}
   ${level === 'extreme' ? 'For Extreme level, use complex sentences, rare vocabulary, and tricky combinations of rules.' : ''}
   
-  IMPORTANT: Do NOT use Arabic diacritics (Tashkeel) in any Arabic text. Use plain Arabic letters only.
+  IMPORTANT: Do NOT use Arabic diacritics (Tashkeel) in ANY text (Arabic or Ammar). Use plain letters only.
 
   Return ONLY a JSON array of objects with this schema:
   {
@@ -88,7 +88,7 @@ export async function generateFlashcards(level: 'beginner' | 'intermediate' | 'a
   Level: ${level}
   ${level === 'extreme' ? 'For Extreme level, use complex words, rare vocabulary, and tricky combinations of rules.' : ''}
   
-  IMPORTANT: Do NOT use Arabic diacritics (Tashkeel) in the 'arabic' field. Use plain Arabic letters only.
+  IMPORTANT: Do NOT use Arabic diacritics (Tashkeel) in ANY text (Arabic or Ammar). Use plain letters only.
 
   Return ONLY a JSON array of objects with this schema:
   {

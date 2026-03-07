@@ -106,8 +106,32 @@ function translateWordToAmmar(word: string): string {
 
 // --- Ammar to Arabic ---
 
+function normalizeAmmarInput(text: string): string {
+  // Fix modifier orderings to match our internal constants
+  // User reported issue with 's' + ring + strikethrough (s̶̊)
+  // Our constant for 'ص' is 's' + strikethrough + ring
+  
+  let normalized = text;
+
+  // s + ring (030A) + strikethrough (0336) -> s + strikethrough (0336) + ring (030A)
+  normalized = normalized.replace(/s\u030A\u0336/g, 's\u0336\u030A');
+
+  // T + line below (0331) + strikethrough (0336) -> T + strikethrough (0336) + line below (0331)
+  // Our constant for 'ظ' is T + double + multi
+  normalized = normalized.replace(/T\u0331\u0336/g, 'T\u0336\u0331');
+
+  // a + ring (030A) + tikrar (1d43) -> a + tikrar (1d43) + ring (030A)
+  // Our constant for 'غ' is a + tikrar + yoghashak
+  normalized = normalized.replace(/a\u030A\u1d43/g, 'a\u1d43\u030A');
+
+  return normalized;
+}
+
 export function translateAmmarToArabic(text: string): string {
-  const tokens = text.split(/(\s+|[،.!?؟]+)/);
+  // Strip Tashkeel from Ammar input just in case
+  const cleanText = text.replace(/[\u064B-\u065F\u0670]/g, '');
+  const normalizedText = normalizeAmmarInput(cleanText);
+  const tokens = normalizedText.split(/(\s+|[،.!?؟]+)/);
   
   return tokens.map(token => {
     if (!token.trim() || /^[،.!?؟]+$/.test(token)) {

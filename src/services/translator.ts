@@ -194,6 +194,13 @@ function translateWordToArabic(word: string): string {
       if (processedWord.startsWith(key, i)) {
         const arabicOptions = AMMAR_TO_ARABIC_MAP[key];
         
+        if (!arabicOptions) {
+          // Should not happen if keys come from the map, but safe guard
+          i += key.length;
+          matchFound = true;
+          break;
+        }
+
         // Expand possibilities
         const newPossibilities: string[][] = [];
         for (const existingPath of possibilities) {

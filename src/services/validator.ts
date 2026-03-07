@@ -104,31 +104,31 @@ export function validateAmmarInput(text: string): ValidationError[] {
     // We need to reverse-engineer the word to see if it matches the rules.
     // 1. Identify Suffixes present
     let tempWord = word;
-    let hasMa = false;
-    let hasMe = false;
-    let hasEs = false;
-    let hasWa = false;
+    let hasUm = false;
+    let hasAx = false;
+    let hasLo = false;
+    let hasRi = false;
 
-    if (tempWord.endsWith('ma')) {
-      hasMa = true;
+    if (tempWord.endsWith('um')) {
+      hasUm = true;
       tempWord = tempWord.slice(0, -2);
     }
-    if (tempWord.endsWith('me')) {
-      hasMe = true;
+    if (tempWord.endsWith('ax')) {
+      hasAx = true;
       tempWord = tempWord.slice(0, -2);
     }
-    if (tempWord.endsWith('es')) {
-      hasEs = true;
+    if (tempWord.endsWith('lo')) {
+      hasLo = true;
       tempWord = tempWord.slice(0, -2);
-    } else if (tempWord.endsWith('wa')) {
-      hasWa = true;
+    } else if (tempWord.endsWith('ri')) {
+      hasRi = true;
       tempWord = tempWord.slice(0, -2);
     }
 
     // 2. Identify Prefix
-    let hasMt = false;
-    if (tempWord.startsWith('mt')) {
-      hasMt = true;
+    let hasMu = false;
+    if (tempWord.startsWith('mu')) {
+      hasMu = true;
       tempWord = tempWord.slice(2);
     }
 
@@ -179,73 +179,73 @@ export function validateAmmarInput(text: string): ValidationError[] {
 
     // Length Rule
     const isEven = baseLength % 2 === 0;
-    if (isEven && !hasEs) {
+    if (isEven && !hasLo) {
       errors.push({
         word,
-        message: `Even length (${baseLength}) requires 'es' suffix.`,
-        suggestion: reconstructWord(hasMt, tempWord, 'es', hasMe, hasMa),
+        message: `Even length (${baseLength}) requires 'lo' suffix.`,
+        suggestion: reconstructWord(hasMu, tempWord, 'lo', hasAx, hasUm),
         severity: 'error',
         index
       });
-    } else if (!isEven && !hasWa) {
+    } else if (!isEven && !hasRi) {
       errors.push({
         word,
-        message: `Odd length (${baseLength}) requires 'wa' suffix.`,
-        suggestion: reconstructWord(hasMt, tempWord, 'wa', hasMe, hasMa),
+        message: `Odd length (${baseLength}) requires 'ri' suffix.`,
+        suggestion: reconstructWord(hasMu, tempWord, 'ri', hasAx, hasUm),
         severity: 'error',
         index
       });
-    } else if (isEven && hasWa) {
+    } else if (isEven && hasRi) {
        errors.push({
         word,
-        message: `Even length (${baseLength}) should use 'es', not 'wa'.`,
-        suggestion: reconstructWord(hasMt, tempWord, 'es', hasMe, hasMa),
+        message: `Even length (${baseLength}) should use 'lo', not 'ri'.`,
+        suggestion: reconstructWord(hasMu, tempWord, 'lo', hasAx, hasUm),
         severity: 'error',
         index
       });
-    } else if (!isEven && hasEs) {
+    } else if (!isEven && hasLo) {
        errors.push({
         word,
-        message: `Odd length (${baseLength}) should use 'wa', not 'es'.`,
-        suggestion: reconstructWord(hasMt, tempWord, 'wa', hasMe, hasMa),
+        message: `Odd length (${baseLength}) should use 'ri', not 'lo'.`,
+        suggestion: reconstructWord(hasMu, tempWord, 'ri', hasAx, hasUm),
         severity: 'error',
         index
       });
     }
 
     // Mix Rule
-    if (shouldHaveMix && !hasMe) {
+    if (shouldHaveMix && !hasAx) {
       errors.push({
         word,
-        message: "Word contains Mix characters, missing 'me' suffix.",
-        suggestion: reconstructWord(hasMt, tempWord, isEven ? 'es' : 'wa', true, hasMa),
+        message: "Word contains Mix characters, missing 'ax' suffix.",
+        suggestion: reconstructWord(hasMu, tempWord, isEven ? 'lo' : 'ri', true, hasUm),
         severity: 'error',
         index
       });
-    } else if (!shouldHaveMix && hasMe) {
+    } else if (!shouldHaveMix && hasAx) {
        errors.push({
         word,
-        message: "Word has no Mix characters, remove 'me' suffix.",
-        suggestion: reconstructWord(hasMt, tempWord, isEven ? 'es' : 'wa', false, hasMa),
+        message: "Word has no Mix characters, remove 'ax' suffix.",
+        suggestion: reconstructWord(hasMu, tempWord, isEven ? 'lo' : 'ri', false, hasUm),
         severity: 'warning',
         index
       });
     }
 
     // Max Rule
-    if (shouldHaveMax && !hasMa) {
+    if (shouldHaveMax && !hasUm) {
       errors.push({
         word,
-        message: "Word contains Max characters, missing 'ma' suffix.",
-        suggestion: reconstructWord(hasMt, tempWord, isEven ? 'es' : 'wa', shouldHaveMix, true),
+        message: "Word contains Max characters, missing 'um' suffix.",
+        suggestion: reconstructWord(hasMu, tempWord, isEven ? 'lo' : 'ri', shouldHaveMix, true),
         severity: 'error',
         index
       });
-    } else if (!shouldHaveMax && hasMa) {
+    } else if (!shouldHaveMax && hasUm) {
        errors.push({
         word,
-        message: "Word has no Max characters, remove 'ma' suffix.",
-        suggestion: reconstructWord(hasMt, tempWord, isEven ? 'es' : 'wa', shouldHaveMix, false),
+        message: "Word has no Max characters, remove 'um' suffix.",
+        suggestion: reconstructWord(hasMu, tempWord, isEven ? 'lo' : 'ri', shouldHaveMix, false),
         severity: 'warning',
         index
       });
@@ -253,7 +253,7 @@ export function validateAmmarInput(text: string): ValidationError[] {
 
     // Vowel Rule (Prefix)
     // This is harder because we don't know for sure if the word has vowels without full context decoding.
-    // But if 'mt' is missing, we can check if any of the chars MAP to a vowel.
+    // But if 'mu' is missing, we can check if any of the chars MAP to a vowel.
     let hasVowel = false;
     for (const char of matches) {
        const arabicChar = Object.keys(ARABIC_TO_AMMAR).find(key => ARABIC_TO_AMMAR[key] === char);
@@ -263,19 +263,19 @@ export function validateAmmarInput(text: string): ValidationError[] {
        }
     }
 
-    if (hasVowel && !hasMt) {
+    if (hasVowel && !hasMu) {
       errors.push({
         word,
-        message: "Word contains vowels, missing 'mt' prefix.",
-        suggestion: reconstructWord(true, tempWord, isEven ? 'es' : 'wa', shouldHaveMix, shouldHaveMax),
+        message: "Word contains vowels, missing 'mu' prefix.",
+        suggestion: reconstructWord(true, tempWord, isEven ? 'lo' : 'ri', shouldHaveMix, shouldHaveMax),
         severity: 'error',
         index
       });
-    } else if (!hasVowel && hasMt) {
+    } else if (!hasVowel && hasMu) {
        errors.push({
         word,
-        message: "Word has no vowels, remove 'mt' prefix.",
-        suggestion: reconstructWord(false, tempWord, isEven ? 'es' : 'wa', shouldHaveMix, shouldHaveMax),
+        message: "Word has no vowels, remove 'mu' prefix.",
+        suggestion: reconstructWord(false, tempWord, isEven ? 'lo' : 'ri', shouldHaveMix, shouldHaveMax),
         severity: 'warning',
         index
       });
@@ -286,11 +286,11 @@ export function validateAmmarInput(text: string): ValidationError[] {
   return errors;
 }
 
-function reconstructWord(mt: boolean, base: string, lenSuffix: string, me: boolean, ma: boolean): string {
+function reconstructWord(mu: boolean, base: string, lenSuffix: string, ax: boolean, um: boolean): string {
   let res = base;
-  if (mt) res = 'mt' + res;
+  if (mu) res = 'mu' + res;
   res += lenSuffix;
-  if (me) res += 'me';
-  if (ma) res += 'ma';
+  if (ax) res += 'ax';
+  if (um) res += 'um';
   return res;
 }

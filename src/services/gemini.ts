@@ -4,7 +4,14 @@ import { translateToArabicToAmmar } from "./translator";
 // Initialize with a placeholder or process.env if available.
 // We will re-initialize before calls if needed or rely on the environment variable.
 const apiKey = process.env.GEMINI_API_KEY || '';
-const ai = new GoogleGenAI({ apiKey });
+let ai: GoogleGenAI | null = null;
+
+function getAI() {
+  if (!ai) {
+    ai = new GoogleGenAI({ apiKey });
+  }
+  return ai;
+}
 
 export interface QuizQuestion {
   question: string;
@@ -50,7 +57,7 @@ export async function generateQuiz(level: 'beginner' | 'intermediate' | 'advance
   `;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: MODEL_NAME,
       contents: prompt,
       config: {
@@ -105,7 +112,7 @@ export async function generateFlashcards(level: 'beginner' | 'intermediate' | 'a
   `;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: MODEL_NAME,
       contents: prompt,
       config: {

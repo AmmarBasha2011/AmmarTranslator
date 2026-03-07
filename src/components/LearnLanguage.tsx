@@ -124,7 +124,7 @@ export default function LearnLanguage() {
               </div>
               <div className="p-5 space-y-6">
                 {[
-                  { id: 'I', name: 'Grammar Shield', desc: 'Auto-normalization to Nominative case (Al-Raf\'). Converts endings like "يين" to "ون".', color: 'bg-blue-50 text-blue-600' },
+                  { id: 'I', name: 'Grammar Shield', desc: 'Auto-normalization to Nominative (Al-Raf\'). Converts "ين" to "ون" (Plural) or "ان" (Dual).', color: 'bg-blue-50 text-blue-600' },
                   { id: 'II', name: 'Reflection Protocol', desc: 'The most critical stage. Reverses the entire base character sequence before processing.', color: 'bg-indigo-50 text-indigo-600' },
                   { id: 'III', name: 'Scalar Mapping', desc: 'Length-based suffix injection. Even words get +LO, Odd words get +RI.', color: 'bg-purple-50 text-purple-600' },
                   { id: 'IV', name: 'Mix/Max Detection', desc: 'Injects +AX for complex characters and +UM for maximum load characters.', color: 'bg-pink-50 text-pink-600' },

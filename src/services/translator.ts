@@ -97,9 +97,29 @@ export function translateToArabicToAmmar(text: string): string {
 
 function normalizeArabicGrammar(word: string): string {
   // Rule: Ammar language only accepts Nominative case (Al-Raf').
-  // Replace 'ين' (Accusative/Genitive) with 'ون' (Nominative) at the end of words.
+  // Replace 'ين' (Accusative/Genitive) with 'ون' (Plural Plural) or 'ان' (Dual).
+
+  // Heuristic for Dual: If there are exactly two objects/parts (simplified for now).
+  // Common dual words: كتابين, معلمين (if specific context, but we use a general check)
+  // Let's implement a heuristic: if the character before 'ين' is 'ا', it might be plural or something else.
+  // Actually, 'ين' to 'ون' is for sound masculine plural.
+  // 'ين' to 'ان' is for dual.
+
+  // Let's use a simple vowel-based heuristic for Dual vs Plural:
+  // Usually, if the letter before 'ين' is a 'ب', 'ت', 'ج' etc.
+  // To keep it simple as requested: "ين" -> "ون" AND "ين" -> "ان"
+  // We'll prioritize Plural for now unless we find a clear dual marker.
   if (word.endsWith('ين')) {
-    return word.slice(0, -2) + 'ون';
+    // Check if it's a common dual structure (e.g., word ends with a letter that usually takes 'ان')
+    // For now, let's treat words like 'كتابين' as dual (ان) and 'معلمين' as plural (ون).
+    // A simple list of common dual stems could work, or we can just apply both and let scoring decide?
+    // In this context, let's just use the user's specific request.
+    const dualStems = ['كتاب', 'ولد', 'بنت', 'بيت', 'قلم'];
+    const stem = word.slice(0, -2);
+    if (dualStems.includes(stem)) {
+      return stem + 'ان';
+    }
+    return stem + 'ون';
   }
   return word;
 }

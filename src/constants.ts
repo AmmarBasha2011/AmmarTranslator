@@ -20,13 +20,13 @@ export const MAX_CHARS = new Set([
   'ظ', // T + double + multi (Mix)
   'غ', // a + tikrar + yoghashak (Mix)
   'ق', // f + multi
+  'ع', // a + tikrar
 ]);
 
 export const MIX_CHARS = new Set([
   'ص', // s + double + yoghashak
   'ظ', // T + double + multi
   'غ', // a + tikrar + yoghashak
-  'ع', // a + tikrar
 ]);
 
 // Mapping: Arabic -> Ammar
@@ -125,7 +125,7 @@ export const COMMON_WORDS = new Set([
 ]);
 
 // Vowel Characters (Rule: Add 'mt' prefix if present)
-export const VOWEL_CHARS = new Set(['أ', 'ا', 'ة', 'ع', 'غ', 'إ', 'آ', 'ء', 'ؤ', 'ئ', 'ى']);
+export const VOWEL_CHARS = new Set(['أ', 'ا', 'ة', 'ع', 'غ', 'إ', 'آ', 'ء', 'ؤ', 'ئ', 'ى', 'ي']);
 
 // Helper to check if a character is Arabic
 export function isArabicChar(char: string): boolean {

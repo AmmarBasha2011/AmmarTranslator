@@ -317,15 +317,13 @@ export default function LearnLanguage() {
                     <h5 className="text-[10px] font-black text-muted-grey uppercase tracking-[0.2em] mb-4">Sample Trace: [عمار]</h5>
                     <div className="flex flex-wrap items-center gap-3 font-black text-sm tracking-tight">
                        <span className="text-electric-purple">MU-</span>
-                       <span className="text-muted-grey italic">aᵃm...</span>
+                       <span className="text-muted-grey italic">aᵃMar</span>
                        <span className="w-4 h-px bg-white/10" />
                        <span className="text-neon-cyan">+LO</span>
                        <span className="text-white/10">+</span>
-                       <span className="text-electric-purple">+AX</span>
-                       <span className="text-white/10">+</span>
                        <span className="text-neon-cyan">+UM</span>
                        <span className="text-white/10">=</span>
-                       <span className="bg-electric-purple/10 text-electric-purple px-4 py-2 rounded-xl border border-electric-purple/20">muaᵃmmarloaxum</span>
+                       <span className="bg-electric-purple/10 text-electric-purple px-4 py-2 rounded-xl border border-electric-purple/20">muaᵃMarloum</span>
                     </div>
                  </div>
               </div>

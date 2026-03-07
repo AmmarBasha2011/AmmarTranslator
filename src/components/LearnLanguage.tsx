@@ -8,11 +8,15 @@ import Quiz from './Quiz';
 import { generateQuiz, generateFlashcards, QuizQuestion, Flashcard } from '../services/gemini';
 
 const KEYBOARD_LAYOUT = `OK_Layout_Begin
+Name:AmmarLang
 1234567890
-i o å a b T s̊ g H̅ H̱
-d z̊ r z s ş s̶̊ s̶ Ṯ Ṯ̶
-aᵃ aᵃ̊ f f̱ k L M N H w Y
+f̱WaᵃrTYåaH
+bsdfgH̅H̱kL
+zz̊s̊şmno
 !@#$%^&*()
+Fwaᵃ̊rṮYåAoH
+bs̶̊s̶fgH̅H̱KL
+Ṯ̶Z̊S̊ŞMNO
 £¥€$₹^&*()№√÷
 ~\`{}%_-=|+§∷‡
 @[]#/\'"«»—‐–

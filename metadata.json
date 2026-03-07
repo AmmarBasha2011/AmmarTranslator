@@ -1,0 +1,7 @@
+{
+  "name": "Ammar Language Translator V5",
+  "description": "The ultimate Ammar Language suite. Features AI translation, smart validation, interactive learning tools (Flashcards, Quizzes), and speech capabilities.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

@@ -15,14 +15,19 @@ export interface ValidationError {
   index: number;
 }
 
-export function validateInput(text: string): ValidationError[] {
+export function validateInput(text: string, fromLang: string = 'auto'): ValidationError[] {
   if (!text.trim()) return [];
   
-  if (isArabicText(text)) {
+  if (fromLang === 'ar') {
     return validateArabicInput(text);
-  } else {
+  } else if (fromLang === 'am') {
     return validateAmmarInput(text);
+  } else if (fromLang === 'auto') {
+    if (isArabicText(text)) {
+      return validateArabicInput(text);
+    }
   }
+  return [];
 }
 
 // --- Arabic Validation ---

@@ -1,7 +1,7 @@
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
-import { translateText } from './src/services/gemini';
-import { translateToArabicToAmmar, translateAmmarToArabic } from './src/services/translator';
+import { translate } from './src/services/translationService';
+import { SupportedLanguage } from './src/services/translationService';
 import 'dotenv/config';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -17,36 +17,19 @@ app.use(express.json());
 app.get('/api/translate', async (req, res) => {
   const { text, from, to } = req.query;
 
-  if (!text || typeof text !== 'string') {
-    return res.status(400).json({ error: 'Missing text parameter' });
+  if (!text || typeof text !== 'string' || !from || !to) {
+    return res.status(400).json({ error: 'Missing parameters. text, from, and to are required.' });
   }
 
   try {
-    let result = '';
-    const source = (from as string).toLowerCase();
-    const target = (to as string).toLowerCase();
+    const source = (from as string).toLowerCase() as SupportedLanguage;
+    const target = (to as string).toLowerCase() as SupportedLanguage;
 
-    if (source === 'ar' && target === 'am') {
-      result = translateToArabicToAmmar(text);
-    } else if (source === 'am' && target === 'ar') {
-      result = translateAmmarToArabic(text);
-    } else if (source === 'en' && target === 'am') {
-      const arabic = await translateText(text, 'en', 'ar');
-      result = translateToArabicToAmmar(arabic);
-    } else if (source === 'am' && target === 'en') {
-      const arabic = translateAmmarToArabic(text);
-      result = await translateText(arabic, 'ar', 'en');
-    } else if (source === 'en' && target === 'ar') {
-       result = await translateText(text, 'en', 'ar');
-    } else if (source === 'ar' && target === 'en') {
-       result = await translateText(text, 'ar', 'en');
-    } else {
-      return res.status(400).json({ error: 'Unsupported language pair. Supported: ar, am, en' });
-    }
+    const translated = await translate(text, source, target);
 
     res.json({
       text,
-      translated: result,
+      translated,
       from: source,
       to: target
     });

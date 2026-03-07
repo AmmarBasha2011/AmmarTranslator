@@ -28,11 +28,11 @@ export async function generateQuiz(level: 'beginner' | 'intermediate' | 'advance
   1. Base Mapping: Arabic letters map to Latin letters (e.g., ب->b, ت->T).
   2. Modifiers: Special Arabic chars map to Latin chars with modifiers (e.g., ث->s + circle above).
   3. Length Rule: 
-     - Even length base word -> add suffix 'es'.
-     - Odd length base word -> add suffix 'wa'.
-  4. Mix Rule: If word has Mix chars (ص, ظ, غ), add suffix 'me'.
-  5. Max Rule: If word has Max chars (أ, إ, آ, ء, ؤ, ئ, ث, ح, خ, ذ, ش, ص, ض, ط, ظ, ع, غ, ق), add suffix 'ma'.
-  6. Vowel Rule: If word has vowels (أ, ا, ة, ع, غ, إ, آ, ء, ؤ, ئ), add prefix 'mt'.
+     - Even length base word -> add suffix 'lo'.
+     - Odd length base word -> add suffix 'ri'.
+  4. Mix Rule: If word has Mix chars (ص, ظ, غ), add suffix 'ax'.
+  5. Max Rule: If word has Max chars (أ, إ, آ, ء, ؤ, ئ, ث, ح, خ, ذ, ش, ص, ض, ط, ظ, ع, غ, ق), add suffix 'um'.
+  6. Vowel Rule: If word has vowels (أ, ا, ة, ع, غ, إ, آ, ء, ؤ, ئ), add prefix 'mu'.
   7. Grammar: Always Nominative case (ends in 'un'/'wn' or 'an'). 'yn' is forbidden.
 
   Level: ${level}
@@ -93,15 +93,15 @@ export async function generateFlashcards(level: 'beginner' | 'intermediate' | 'a
   Return ONLY a JSON array of objects with this schema:
   {
     arabic: string, // An Arabic word (NO Tashkeel)
-    ammar: string, // The correct Ammar translation (apply all rules: mt prefix, suffixes wa/es, me, ma)
+    ammar: string, // The correct Ammar translation (apply all rules: mu prefix, suffixes ri/lo, ax, um)
     hint: string // A hint about why it is translated this way (e.g., "Odd length + Max char")
   }
   
   Ensure the Ammar translation is strictly correct according to these rules:
-  1. Even length -> 'es', Odd length -> 'wa'.
-  2. Mix char (ص, ظ, غ) -> 'me'.
-  3. Max char (many special chars) -> 'ma'.
-  4. Vowel (أ, ا, ة, ع, غ, etc) -> 'mt' prefix.
+  1. Even length -> 'lo', Odd length -> 'ri'.
+  2. Mix char (ص, ظ, غ) -> 'ax'.
+  3. Max char (many special chars) -> 'um'.
+  4. Vowel (أ, ا, ة, ع, غ, etc) -> 'mu' prefix.
   `;
 
   try {

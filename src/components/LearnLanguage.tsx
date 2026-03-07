@@ -1,14 +1,33 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Layers, HelpCircle, Sparkles, Loader2, WifiOff, AlertTriangle } from 'lucide-react';
+import { BookOpen, Layers, HelpCircle, Sparkles, Loader2, WifiOff, AlertTriangle, Keyboard, Copy, Check } from 'lucide-react';
 import { ARABIC_TO_AMMAR, MAX_CHARS, MIX_CHARS, VOWEL_CHARS } from '../constants';
 import Flashcards from './Flashcards';
 import Quiz from './Quiz';
 import { generateQuiz, generateFlashcards, QuizQuestion, Flashcard } from '../services/gemini';
 
+const KEYBOARD_LAYOUT = `OK_Layout_Begin
+1234567890
+f̱WaᵃrTYåxoH
+bsdfgH̅H̱kL
+zşs̊z̊mN.
+!@#$%^&*()
+f̱Waᵃ̊rṮYåxoH
+bs̶̊s̶fgH̅H̱kL
+Ṯ̶z̊s̊şmN,
+£¥€$₹^&*()№√÷
+~\`{}%_-=|+§∷‡
+@[]#/\'"«»—‐–
+…<>!;:?‹›±.,
+ˉˋˇ´¨˙˚¸﹐˛˘˜ˆ
+―∑éə®†Ωœøπ•·¡
+æß∂ðƒ©ªº∆≠℥∞¿
+ʒΩ≈çþ∫ŋµ≤≥°
+OK_Layout_End`;
+
 export default function LearnLanguage() {
-  const [activeTab, setActiveTab] = useState<'guide' | 'flashcards' | 'quiz'>('guide');
+  const [activeTab, setActiveTab] = useState<'guide' | 'flashcards' | 'quiz' | 'keyboard'>('guide');
   const [level, setLevel] = useState<'beginner' | 'intermediate' | 'advanced' | 'extreme'>('beginner');
   const [count, setCount] = useState(5);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -16,6 +35,13 @@ export default function LearnLanguage() {
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[] | undefined>(undefined);
   const [flashcards, setFlashcards] = useState<Flashcard[] | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
+  const [copiedKeyboard, setCopiedKeyboard] = useState(false);
+
+  const handleCopyKeyboard = () => {
+    navigator.clipboard.writeText(KEYBOARD_LAYOUT);
+    setCopiedKeyboard(true);
+    setTimeout(() => setCopiedKeyboard(false), 2000);
+  };
 
   const handleGenerate = async () => {
     if (!navigator.onLine) {
@@ -124,10 +150,19 @@ export default function LearnLanguage() {
             <HelpCircle size={16} />
             Quiz
           </button>
+          <button
+            onClick={() => setActiveTab('keyboard')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+              activeTab === 'keyboard' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Keyboard size={16} />
+            Keyboard
+          </button>
         </div>
 
         {/* AI Controls (Only for Flashcards & Quiz) */}
-        {activeTab !== 'guide' && (
+        {(activeTab === 'flashcards' || activeTab === 'quiz') && (
           <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
              <div className="flex items-center gap-2 bg-deep-blue-900/30 p-1 rounded-xl border border-white/5 w-full sm:w-auto">
               <select 
@@ -245,7 +280,7 @@ export default function LearnLanguage() {
               <h3 className="text-xl font-bold text-purple-400 mb-4">2. Vowel Chart</h3>
               <p className="text-sm text-slate-400 mb-4">
                 These characters are considered vowels in Ammar Language. If a word contains any of these, 
-                it must start with the prefix <span className="font-mono text-purple-400 bg-purple-500/10 px-1 rounded">mt</span>.
+                it must start with the prefix <span className="font-mono text-purple-400 bg-purple-500/10 px-1 rounded">mu</span>.
               </p>
               <div className="flex flex-wrap gap-3">
                 {vowels.map((char) => (
@@ -334,11 +369,11 @@ export default function LearnLanguage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-white/5 p-3 rounded-lg text-center">
                       <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Even Length</div>
-                      <div className="text-xl font-mono text-neon-cyan">+es</div>
+                      <div className="text-xl font-mono text-neon-cyan">+lo</div>
                     </div>
                     <div className="bg-white/5 p-3 rounded-lg text-center">
                       <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Odd Length</div>
-                      <div className="text-xl font-mono text-neon-cyan">+wa</div>
+                      <div className="text-xl font-mono text-neon-cyan">+ri</div>
                     </div>
                   </div>
                 </div>
@@ -348,7 +383,7 @@ export default function LearnLanguage() {
                   <h4 className="font-bold text-white mb-2">Rule 2: Mix Modifier</h4>
                   <p className="text-slate-300 text-sm mb-3">If the word contains any <span className="text-neon-cyan">Mix Family</span> character.</p>
                   <div className="bg-white/5 p-3 rounded-lg text-center inline-block min-w-[120px]">
-                    <div className="text-xl font-mono text-neon-cyan">+me</div>
+                    <div className="text-xl font-mono text-neon-cyan">+ax</div>
                   </div>
                 </div>
 
@@ -357,16 +392,16 @@ export default function LearnLanguage() {
                   <h4 className="font-bold text-white mb-2">Rule 3: Max Modifier</h4>
                   <p className="text-slate-300 text-sm mb-3">If the word contains any <span className="text-neon-blue">Max Family</span> character (includes Mix).</p>
                   <div className="bg-white/5 p-3 rounded-lg text-center inline-block min-w-[120px]">
-                    <div className="text-xl font-mono text-neon-cyan">+ma</div>
+                    <div className="text-xl font-mono text-neon-cyan">+um</div>
                   </div>
                 </div>
 
                 <div className="relative pl-6 border-l-2 border-purple-500/30">
                   <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-deep-blue-950 border-2 border-purple-500"></div>
                   <h4 className="font-bold text-white mb-2">Rule 4: Vowels (Prefix)</h4>
-                  <p className="text-slate-300 text-sm mb-3">If the word contains any vowel (أ، ا، ة، ع، غ), add <span className="text-purple-400 font-mono">mt</span> at the start.</p>
+                  <p className="text-slate-300 text-sm mb-3">If the word contains any vowel (أ، ا، ة، ع، غ), add <span className="text-purple-400 font-mono">mu</span> at the start.</p>
                   <div className="bg-white/5 p-3 rounded-lg text-center inline-block min-w-[120px]">
-                    <div className="text-xl font-mono text-purple-400">mt+</div>
+                    <div className="text-xl font-mono text-purple-400">mu+</div>
                   </div>
                 </div>
 
@@ -404,28 +439,28 @@ export default function LearnLanguage() {
                 <div className="flex flex-wrap items-center gap-2 text-sm font-mono">
                   <span className="text-slate-500">s̶̊f̱r</span>
                   <span className="text-slate-600">→</span>
-                  <span className="text-neon-cyan">wa</span>
+                  <span className="text-neon-cyan">ri</span>
                   <span className="text-slate-500">(Odd 3)</span>
                   <span className="text-slate-600">+</span>
-                  <span className="text-neon-cyan">me</span>
+                  <span className="text-neon-cyan">ax</span>
                   <span className="text-slate-500">(Has Mix 'ص')</span>
                   <span className="text-slate-600">+</span>
-                  <span className="text-neon-cyan">ma</span>
+                  <span className="text-neon-cyan">um</span>
                   <span className="text-slate-500">(Has Max)</span>
                   <span className="text-slate-600">=</span>
-                  <span className="text-white font-bold bg-neon-blue/20 px-2 py-1 rounded">s̶̊f̱rwamema</span>
+                  <span className="text-white font-bold bg-neon-blue/20 px-2 py-1 rounded">s̶̊f̱rriaxum</span>
                 </div>
               </div>
               
               <div className="mt-4 bg-black/20 p-4 rounded-xl border border-white/5">
                 <h5 className="text-sm font-bold text-slate-300 mb-2">Example: "عمار" (Ammar)</h5>
                 <div className="flex flex-wrap items-center gap-2 text-sm font-mono">
-                  <span className="text-purple-400">mt</span>
+                  <span className="text-purple-400">mu</span>
                   <span className="text-slate-500">(Has Vowel 'ع')</span>
                   <span className="text-slate-600">+</span>
                   <span className="text-slate-500">aᵃ̊m...</span>
                   <span className="text-slate-600">=</span>
-                  <span className="text-white font-bold bg-purple-500/20 px-2 py-1 rounded">mtaᵃ̊mmaresma</span>
+                  <span className="text-white font-bold bg-purple-500/20 px-2 py-1 rounded">muaᵃ̊mmarloaxum</span>
                 </div>
               </div>
             </section>
@@ -451,6 +486,39 @@ export default function LearnLanguage() {
             exit={{ opacity: 0, x: -20 }}
           >
             <Quiz questions={quizQuestions} />
+          </motion.div>
+        )}
+
+        {activeTab === 'keyboard' && (
+          <motion.div
+            key="keyboard"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <section className="bg-deep-blue-900/50 rounded-2xl border border-white/10 p-6">
+              <h3 className="text-xl font-bold text-white mb-4">Get The Keyboard</h3>
+              <p className="text-slate-300 mb-6">
+                Use the custom Ammar keyboard layout with the <span className="text-neon-cyan font-bold">Multiling O Keyboard</span> app on Android.
+              </p>
+              
+              <div className="bg-black/30 rounded-xl border border-white/5 p-4 mb-6 font-mono text-xs sm:text-sm text-slate-400 overflow-x-auto whitespace-pre">
+                {KEYBOARD_LAYOUT}
+              </div>
+
+              <button
+                onClick={handleCopyKeyboard}
+                className="flex items-center gap-2 px-6 py-3 bg-neon-blue text-white rounded-xl font-bold hover:bg-neon-blue/90 transition-all shadow-lg shadow-neon-blue/20 w-full sm:w-auto justify-center"
+              >
+                {copiedKeyboard ? <Check size={20} /> : <Copy size={20} />}
+                {copiedKeyboard ? "Copied Layout Code!" : "Copy Layout Code"}
+              </button>
+              
+              <p className="text-sm text-slate-400 mt-4">
+                <span className="text-neon-cyan font-bold">Instructions:</span> Copy this code and paste it into the DIY settings inside the Multiling O Keyboard app to get the original Ammar layout.
+              </p>
+            </section>
           </motion.div>
         )}
       </AnimatePresence>

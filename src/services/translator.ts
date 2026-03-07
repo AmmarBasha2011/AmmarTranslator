@@ -79,26 +79,26 @@ function translateWordToAmmar(word: string): string {
   // 1. Length Rule
   if (originalLength > 0) {
     if (originalLength % 2 === 0) {
-      ammarWord += 'es';
+      ammarWord += 'lo';
     } else {
-      ammarWord += 'wa';
+      ammarWord += 'ri';
     }
   }
 
   // 2. Mix Rule
   if (hasMix) {
-    ammarWord += 'me';
+    ammarWord += 'ax';
   }
 
   // 3. Max Rule
   if (hasMax) {
-    ammarWord += 'ma';
+    ammarWord += 'um';
   }
 
   // Apply Prefix Rule
-  // 4. Vowel Rule (mt prefix)
+  // 4. Vowel Rule (mu prefix)
   if (hasVowel) {
-    ammarWord = 'mt' + ammarWord;
+    ammarWord = 'mu' + ammarWord;
   }
 
   return ammarWord;
@@ -123,33 +123,33 @@ export function translateAmmarToArabic(text: string): string {
 
 function translateWordToArabic(word: string): string {
   let processedWord = word;
-  let hasMtPrefix = false;
+  let hasMuPrefix = false;
 
-  // 0. Check for 'mt' prefix (Vowel Rule)
+  // 0. Check for 'mu' prefix (Vowel Rule)
   // We tentatively strip it, then verify later if the decoded word actually has vowels.
-  if (processedWord.startsWith('mt')) {
+  if (processedWord.startsWith('mu')) {
     processedWord = processedWord.slice(2);
-    hasMtPrefix = true;
+    hasMuPrefix = true;
   }
 
   // 1. Stemming (Reverse order of addition)
   // Order added: Length -> Mix -> Max
   // Order removed: Max -> Mix -> Length
 
-  // Remove 'ma' (Max suffix)
-  if (processedWord.endsWith('ma')) {
+  // Remove 'um' (Max suffix)
+  if (processedWord.endsWith('um')) {
     processedWord = processedWord.slice(0, -2);
   }
 
-  // Remove 'me' (Mix suffix)
-  if (processedWord.endsWith('me')) {
+  // Remove 'ax' (Mix suffix)
+  if (processedWord.endsWith('ax')) {
     processedWord = processedWord.slice(0, -2);
   }
 
-  // Remove 'es' or 'wa' (Length suffix)
-  if (processedWord.endsWith('es')) {
+  // Remove 'lo' or 'ri' (Length suffix)
+  if (processedWord.endsWith('lo')) {
     processedWord = processedWord.slice(0, -2);
-  } else if (processedWord.endsWith('wa')) {
+  } else if (processedWord.endsWith('ri')) {
     processedWord = processedWord.slice(0, -2);
   }
 
@@ -198,25 +198,25 @@ function translateWordToArabic(word: string): string {
   // 3. Scoring System
   const candidates = possibilities.map(chars => chars.join(''));
   
-  // Filter candidates based on Vowel Rule if 'mt' was stripped
+  // Filter candidates based on Vowel Rule if 'mu' was stripped
   let filteredCandidates = candidates;
-  if (hasMtPrefix) {
-    // If we stripped 'mt', the valid candidate MUST contain a vowel.
-    // If it doesn't, then 'mt' was likely part of the word, not a prefix.
+  if (hasMuPrefix) {
+    // If we stripped 'mu', the valid candidate MUST contain a vowel.
+    // If it doesn't, then 'mu' was likely part of the word, not a prefix.
     // However, since we already stripped it, we might be in a tricky spot.
-    // But wait, if 'mt' was part of the word, we stripped it, so the decoding is missing 'mt'.
-    // This logic is slightly flawed if 'mt' is ambiguous.
-    // But given the constraints, let's assume if we stripped 'mt', we prefer candidates with vowels.
+    // But wait, if 'mu' was part of the word, we stripped it, so the decoding is missing 'mu'.
+    // This logic is slightly flawed if 'mu' is ambiguous.
+    // But given the constraints, let's assume if we stripped 'mu', we prefer candidates with vowels.
     const withVowels = candidates.filter(c => [...c].some(char => VOWEL_CHARS.has(char)));
     if (withVowels.length > 0) {
       filteredCandidates = withVowels;
     } else {
-      // If no candidate has vowels, then the 'mt' prefix was probably incorrect.
-      // We should have kept 'mt'.
-      // Re-run decoding with 'mt' prefix?
-      // Or just prepend 'مت' to the candidates?
-      // 'mt' -> 'م' + 'ت' usually.
-      filteredCandidates = candidates.map(c => 'مت' + c);
+      // If no candidate has vowels, then the 'mu' prefix was probably incorrect.
+      // We should have kept 'mu'.
+      // Re-run decoding with 'mu' prefix?
+      // Or just prepend 'مو' to the candidates?
+      // 'mu' -> 'م' + 'و' usually.
+      filteredCandidates = candidates.map(c => 'مو' + c);
     }
   }
 

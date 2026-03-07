@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Copy, ArrowRightLeft, Sparkles, X, AlertTriangle, CheckCircle2, Volume2, Mic, MicOff, Globe } from 'lucide-react';
+import { Copy, ArrowRightLeft, Sparkles, X, AlertTriangle, CheckCircle2, Volume2, Mic, MicOff, Globe, Terminal, Cpu, Zap } from 'lucide-react';
 import { translateToArabicToAmmar, translateAmmarToArabic } from '../services/translator';
 import { validateInput, ValidationError } from '../services/validator';
 import { isArabicText } from '../constants';
 import { cn } from '../lib/utils';
 import { useTextToSpeech } from '../hooks/useTextToSpeech';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
-import { translateText } from '../services/gemini';
+import { translateText, LANGUAGES, Language } from '../services/translation';
 
 export default function TranslatorView() {
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
-  const [direction, setDirection] = useState<'auto' | 'ar-to-am' | 'am-to-ar' | 'en-to-am' | 'am-to-en'>('auto');
-  const [detectedDirection, setDetectedDirection] = useState<'ar-to-am' | 'am-to-ar' | 'en-to-am' | 'am-to-en'>('ar-to-am');
+  const [sourceLang, setSourceLang] = useState<Language>('ar');
+  const [targetLang, setTargetLang] = useState<Language>('am');
   const [copied, setCopied] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -26,7 +26,7 @@ export default function TranslatorView() {
 
   const { isListening, isSupported: isSpeechSupported, startListening, stopListening } = useSpeechRecognition({
     onResult: handleSpeechResult,
-    lang: 'ar-SA'
+    lang: sourceLang === 'ar' ? 'ar-SA' : sourceLang === 'en' ? 'en-US' : 'fr-FR' // Basic mapping
   });
 
   // Debounce translation and validation
@@ -38,50 +38,28 @@ export default function TranslatorView() {
         return;
       }
 
-      // Validation
-      const errors = validateInput(inputText);
-      setValidationErrors(errors);
-
-      let currentDirection = direction;
-      
-      if (direction === 'auto') {
-        const isAr = isArabicText(inputText);
-        // Default auto only detects Arabic vs Ammar for now to avoid confusion with English
-        currentDirection = isAr ? 'ar-to-am' : 'am-to-ar';
-        setDetectedDirection(currentDirection as any);
+      // Validation only for Ammar input
+      if (sourceLang === 'am') {
+        const errors = validateInput(inputText);
+        setValidationErrors(errors);
       } else {
-        setDetectedDirection(direction as any);
+        setValidationErrors([]);
       }
 
       setIsTranslating(true);
       try {
-        if (currentDirection === 'ar-to-am') {
-          setOutputText(translateToArabicToAmmar(inputText));
-        } else if (currentDirection === 'am-to-ar') {
-          setOutputText(translateAmmarToArabic(inputText));
-        } else if (currentDirection === 'en-to-am') {
-          // English -> Arabic -> Ammar
-          const arabic = await translateText(inputText, 'en', 'ar');
-          if (arabic) {
-            setOutputText(translateToArabicToAmmar(arabic));
-          }
-        } else if (currentDirection === 'am-to-en') {
-          // Ammar -> Arabic -> English
-          const arabic = translateAmmarToArabic(inputText);
-          const english = await translateText(arabic, 'ar', 'en');
-          if (english) {
-            setOutputText(english);
-          }
-        }
+        const result = await translateText(inputText, sourceLang, targetLang);
+        setOutputText(result);
       } catch (e) {
         console.error("Translation failed", e);
+        setOutputText("Error: Translation failed.");
       } finally {
         setIsTranslating(false);
       }
-    }, 500); // Increased debounce for API calls
+    }, 800);
 
     return () => clearTimeout(timer);
-  }, [inputText, direction]);
+  }, [inputText, sourceLang, targetLang]);
 
   const handleCopy = () => {
     if (!outputText) return;
@@ -90,13 +68,11 @@ export default function TranslatorView() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const toggleDirection = () => {
-    // Cycle through modes
-    if (direction === 'auto') setDirection('ar-to-am');
-    else if (direction === 'ar-to-am') setDirection('am-to-ar');
-    else if (direction === 'am-to-ar') setDirection('en-to-am');
-    else if (direction === 'en-to-am') setDirection('am-to-en');
-    else setDirection('auto');
+  const swapLanguages = () => {
+    setSourceLang(targetLang);
+    setTargetLang(sourceLang);
+    setInputText(outputText);
+    setOutputText(inputText);
   };
 
   const applySuggestion = (error: ValidationError) => {
@@ -109,11 +85,7 @@ export default function TranslatorView() {
     if (isSpeaking) {
       stopSpeaking();
     } else {
-      let lang = 'ar';
-      if (detectedDirection === 'am-to-ar' || detectedDirection === 'am-to-en') lang = 'am'; // Custom handling for Ammar?
-      else if (detectedDirection === 'en-to-am') lang = 'en';
-      
-      speak(inputText, lang);
+      speak(inputText, sourceLang === 'am' ? 'ar' : sourceLang); // Ammar uses Arabic TTS for now
     }
   };
 
@@ -121,11 +93,7 @@ export default function TranslatorView() {
     if (isSpeaking) {
       stopSpeaking();
     } else {
-      let lang = 'ar';
-      if (detectedDirection === 'ar-to-am' || detectedDirection === 'en-to-am') lang = 'am';
-      else if (detectedDirection === 'am-to-en') lang = 'en';
-      
-      speak(outputText, lang);
+      speak(outputText, targetLang === 'am' ? 'ar' : targetLang);
     }
   };
 
@@ -138,115 +106,108 @@ export default function TranslatorView() {
   };
 
   return (
-    <div className="flex flex-col gap-4 pb-24">
-      {/* Controls */}
-      <div className="flex items-center justify-between px-2 overflow-x-auto">
-        <div className="flex items-center gap-2 text-sm font-medium text-slate-300 bg-deep-blue-900/50 p-1 rounded-lg border border-white/5 whitespace-nowrap">
-          <button 
-            onClick={() => setDirection('auto')}
-            className={cn(
-              "px-3 py-1.5 rounded-md transition-all",
-              direction === 'auto' ? "bg-neon-blue/20 text-neon-blue shadow-sm" : "hover:text-white hover:bg-white/5"
-            )}
+    <div className="flex flex-col gap-6 pb-24 font-mono">
+      {/* Robotic Header */}
+      <div className="flex items-center justify-between border-b border-neon-green/30 pb-4">
+        <div className="flex items-center gap-2 text-neon-green">
+          <Terminal size={20} />
+          <span className="text-sm tracking-widest uppercase">Translation_Module_v2.0</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-neon-green rounded-full animate-pulse" />
+          <span className="text-xs text-neon-green/70 uppercase">System_Online</span>
+        </div>
+      </div>
+
+      {/* Language Selector */}
+      <div className="bg-black border border-neon-green/30 p-4 rounded-none relative overflow-hidden group">
+        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-neon-green" />
+        <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-neon-green" />
+        <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-neon-green" />
+        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-neon-green" />
+        
+        <div className="flex items-center justify-between gap-4">
+          <select 
+            value={sourceLang}
+            onChange={(e) => setSourceLang(e.target.value as Language)}
+            className="bg-transparent text-neon-green border border-neon-green/30 p-2 text-sm focus:outline-none focus:border-neon-green uppercase tracking-wider w-full"
           >
-            Auto
-          </button>
-          <div className="w-px h-4 bg-white/10" />
-          
-          <button 
-            onClick={() => setDirection('ar-to-am')}
-            className={cn(
-              "px-3 py-1.5 rounded-md transition-all",
-              direction === 'ar-to-am' ? "bg-neon-blue/20 text-neon-blue shadow-sm" : "hover:text-white hover:bg-white/5"
-            )}
-          >
-            Ar <ArrowRightLeft size={12} className="inline mx-1" /> Am
-          </button>
+            {LANGUAGES.map(lang => (
+              <option key={lang.code} value={lang.code} className="bg-black text-neon-green">{lang.name}</option>
+            ))}
+          </select>
 
           <button 
-            onClick={() => setDirection('am-to-ar')}
-            className={cn(
-              "px-3 py-1.5 rounded-md transition-all",
-              direction === 'am-to-ar' ? "bg-neon-blue/20 text-neon-blue shadow-sm" : "hover:text-white hover:bg-white/5"
-            )}
+            onClick={swapLanguages}
+            className="p-2 text-neon-green hover:bg-neon-green/10 transition-colors border border-neon-green/30 rounded-none"
           >
-            Am <ArrowRightLeft size={12} className="inline mx-1" /> Ar
+            <ArrowRightLeft size={18} />
           </button>
 
-          <button 
-            onClick={() => setDirection('en-to-am')}
-            className={cn(
-              "px-3 py-1.5 rounded-md transition-all",
-              direction === 'en-to-am' ? "bg-neon-blue/20 text-neon-blue shadow-sm" : "hover:text-white hover:bg-white/5"
-            )}
+          <select 
+            value={targetLang}
+            onChange={(e) => setTargetLang(e.target.value as Language)}
+            className="bg-transparent text-neon-green border border-neon-green/30 p-2 text-sm focus:outline-none focus:border-neon-green uppercase tracking-wider w-full"
           >
-            En <ArrowRightLeft size={12} className="inline mx-1" /> Am
-          </button>
-
-          <button 
-            onClick={() => setDirection('am-to-en')}
-            className={cn(
-              "px-3 py-1.5 rounded-md transition-all",
-              direction === 'am-to-en' ? "bg-neon-blue/20 text-neon-blue shadow-sm" : "hover:text-white hover:bg-white/5"
-            )}
-          >
-            Am <ArrowRightLeft size={12} className="inline mx-1" /> En
-          </button>
+            {LANGUAGES.map(lang => (
+              <option key={lang.code} value={lang.code} className="bg-black text-neon-green">{lang.name}</option>
+            ))}
+          </select>
         </div>
       </div>
 
       {/* Input Area */}
       <div className="relative group">
+        <div className="absolute -inset-0.5 bg-neon-green/20 blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
         <div className={cn(
-          "absolute -inset-0.5 rounded-2xl blur opacity-75 transition duration-500",
-          validationErrors.length > 0 ? "bg-red-500/50" : "bg-gradient-to-r from-neon-blue/20 to-neon-cyan/20 group-hover:opacity-100"
-        )}></div>
-        <div className={cn(
-          "relative bg-deep-blue-900 rounded-2xl border shadow-xl overflow-hidden transition-colors",
-          validationErrors.length > 0 ? "border-red-500/50" : "border-white/10"
+          "relative bg-black border-2 transition-colors p-1",
+          validationErrors.length > 0 ? "border-neon-red" : "border-neon-green/50 group-hover:border-neon-green"
         )}>
+          {/* Corner Decors */}
+          <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-neon-green" />
+          <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-neon-green" />
+          <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-neon-green" />
+          <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-neon-green" />
+
           <textarea
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="Type here to translate..."
-            className="w-full h-40 sm:h-48 bg-transparent p-5 text-lg sm:text-xl resize-none focus:outline-none placeholder:text-slate-600 font-medium leading-relaxed"
+            placeholder="INITIATE_INPUT_SEQUENCE..."
+            className="w-full h-40 bg-transparent p-4 text-lg text-neon-green placeholder:text-neon-green/30 resize-none focus:outline-none font-mono leading-relaxed"
             dir="auto"
           />
           
           {/* Input Actions */}
-          <div className="absolute top-4 right-4 flex items-center gap-2">
-            {/* TTS Button */}
+          <div className="absolute bottom-4 right-4 flex items-center gap-2">
             {inputText && (
               <button
                 onClick={handleInputTTS}
-                className="p-2 rounded-full bg-deep-blue-800 text-slate-400 hover:text-white hover:bg-deep-blue-700 transition-colors"
-                title="Listen"
+                className="p-2 text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10 transition-colors border border-neon-green/30"
+                title="Audio_Output"
               >
-                <Volume2 size={16} className={isSpeaking ? "text-neon-cyan animate-pulse" : ""} />
+                <Volume2 size={16} className={isSpeaking ? "animate-pulse" : ""} />
               </button>
             )}
 
-            {/* STT Button (Only for Arabic input) */}
-            {isSpeechSupported && detectedDirection === 'ar-to-am' && (
+            {isSpeechSupported && (
               <button
                 onClick={handleMicClick}
                 className={cn(
-                  "p-2 rounded-full transition-colors",
+                  "p-2 transition-colors border border-neon-green/30",
                   isListening 
-                    ? "bg-red-500/20 text-red-400 animate-pulse" 
-                    : "bg-deep-blue-800 text-slate-400 hover:text-white hover:bg-deep-blue-700"
+                    ? "bg-neon-red/20 text-neon-red border-neon-red animate-pulse" 
+                    : "text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10"
                 )}
-                title="Speak (Arabic)"
+                title="Voice_Input"
               >
                 {isListening ? <MicOff size={16} /> : <Mic size={16} />}
               </button>
             )}
 
-            {/* Clear Button */}
             {inputText && (
               <button 
                 onClick={() => { setInputText(''); setOutputText(''); setValidationErrors([]); }}
-                className="p-2 rounded-full bg-deep-blue-800 text-slate-400 hover:text-white hover:bg-deep-blue-700 transition-colors"
+                className="p-2 text-neon-green/70 hover:text-neon-red hover:bg-neon-red/10 transition-colors border border-neon-green/30 hover:border-neon-red"
               >
                 <X size={16} />
               </button>
@@ -264,25 +225,26 @@ export default function TranslatorView() {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 space-y-3">
-              <div className="flex items-center gap-2 text-red-400 font-medium">
-                <AlertTriangle size={18} />
-                <span>Input Issues Detected</span>
+            <div className="bg-neon-red/5 border border-neon-red/50 p-4 space-y-3 relative">
+              <div className="absolute top-0 left-0 w-full h-[1px] bg-neon-red/50" />
+              <div className="flex items-center gap-2 text-neon-red font-bold uppercase tracking-wider text-xs">
+                <AlertTriangle size={14} />
+                <span>Error_Log: Input_Validation_Failed</span>
               </div>
               <div className="space-y-2">
                 {validationErrors.map((error, idx) => (
-                  <div key={idx} className="flex items-start gap-3 bg-red-500/5 p-2 rounded-lg">
+                  <div key={idx} className="flex items-start gap-3 pl-4 border-l border-neon-red/30">
                     <div className="flex-1">
-                      <p className="text-sm text-red-300">
-                        <span className="font-bold text-red-200">"{error.word}"</span>: {error.message}
+                      <p className="text-sm text-neon-red/80 font-mono">
+                        <span className="font-bold text-neon-red">"{error.word}"</span>: {error.message}
                       </p>
                       {error.suggestion && (
                         <button 
                           onClick={() => applySuggestion(error)}
-                          className="mt-1 flex items-center gap-1 text-xs text-green-400 hover:text-green-300 transition-colors"
+                          className="mt-2 flex items-center gap-2 text-xs text-neon-green hover:text-white transition-colors uppercase tracking-wider border border-neon-green/30 px-2 py-1"
                         >
                           <CheckCircle2 size={12} />
-                          Fix to "{error.suggestion}"
+                          Execute_Fix: "{error.suggestion}"
                         </button>
                       )}
                     </div>
@@ -296,33 +258,44 @@ export default function TranslatorView() {
 
       {/* Output Area */}
       <div className="relative group mt-2">
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-neon-cyan/20 to-neon-blue/20 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-500"></div>
-        <div className="relative bg-deep-blue-800/50 backdrop-blur-sm rounded-2xl border border-white/10 shadow-xl overflow-hidden min-h-[160px] flex flex-col">
+        <div className="absolute -inset-0.5 bg-neon-cyan/20 blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+        <div className="relative bg-black border-2 border-neon-cyan/50 group-hover:border-neon-cyan p-1 min-h-[160px] flex flex-col">
+           {/* Corner Decors */}
+           <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-neon-cyan" />
+           <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-neon-cyan" />
+           <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-neon-cyan" />
+           <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-neon-cyan" />
+
           <div className="flex-1 p-5">
-            {outputText ? (
-              <p className="text-lg sm:text-xl font-medium leading-relaxed break-words text-neon-cyan/90" dir="auto">
+            {isTranslating ? (
+              <div className="h-full flex flex-col items-center justify-center text-neon-cyan gap-2">
+                <Loader2 size={24} className="animate-spin" />
+                <span className="text-xs uppercase tracking-widest animate-pulse">Processing_Data...</span>
+              </div>
+            ) : outputText ? (
+              <p className="text-lg text-neon-cyan font-mono leading-relaxed break-words" dir="auto">
                 {outputText}
               </p>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-slate-600 gap-2 opacity-50">
-                <Sparkles size={24} />
-                <span className="text-sm">Translation will appear here</span>
+              <div className="h-full flex flex-col items-center justify-center text-neon-cyan/30 gap-2">
+                <Cpu size={24} />
+                <span className="text-xs uppercase tracking-widest">Awaiting_Input...</span>
               </div>
             )}
           </div>
           
           {/* Actions Bar */}
-          <div className="border-t border-white/5 bg-deep-blue-900/30 p-3 flex justify-between items-center gap-2">
+          <div className="border-t border-neon-cyan/20 bg-neon-cyan/5 p-2 flex justify-between items-center gap-2">
             
             {/* Output TTS */}
             <div>
               {outputText && (
                 <button
                   onClick={handleOutputTTS}
-                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-slate-300 hover:text-white"
-                  title="Listen"
+                  className="p-2 text-neon-cyan/70 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-colors border border-neon-cyan/30"
+                  title="Audio_Output"
                 >
-                   <Volume2 size={18} className={isSpeaking ? "text-neon-cyan animate-pulse" : ""} />
+                   <Volume2 size={16} className={isSpeaking ? "animate-pulse" : ""} />
                 </button>
               )}
             </div>
@@ -330,16 +303,16 @@ export default function TranslatorView() {
             <button
               onClick={handleCopy}
               disabled={!outputText}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium text-slate-300 hover:text-white active:scale-95"
+              className="flex items-center gap-2 px-4 py-2 bg-transparent hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-xs font-bold uppercase tracking-wider text-neon-cyan border border-neon-cyan/30 hover:border-neon-cyan"
             >
               {copied ? (
                 <>
-                  <span className="text-green-400">Copied!</span>
+                  <span className="text-white">Copied</span>
                 </>
               ) : (
                 <>
-                  <Copy size={16} />
-                  <span>Copy</span>
+                  <Copy size={14} />
+                  <span>Copy_Output</span>
                 </>
               )}
             </button>
@@ -348,4 +321,23 @@ export default function TranslatorView() {
       </div>
     </div>
   );
+}
+
+function Loader2({ size, className }: { size: number, className?: string }) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+    >
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
+  )
 }

@@ -161,5 +161,5 @@ export function useTextToSpeech() {
     setIsSpeaking(false);
   }, []);
 
-  return { speak, stop, isSpeaking };
+  return { speak, stop, isSpeaking, convertToPhonetic: convertAmmarToArabicPhonetic };
 }

@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Copy, ArrowRightLeft, Sparkles, X, AlertTriangle, CheckCircle2, Volume2, Mic, MicOff } from 'lucide-react';
+import { Copy, ArrowRightLeft, Sparkles, X, AlertTriangle, CheckCircle2, Volume2, Mic, MicOff, Upload, Download, FileText, Music } from 'lucide-react';
 import { validateInput, ValidationError } from '../services/validator';
-import { isArabicText } from '../constants';
 import { cn } from '../lib/utils';
 import { useTextToSpeech } from '../hooks/useTextToSpeech';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { translate, SupportedLanguage } from '../services/translationService';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configure PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 const LANGUAGES: { code: SupportedLanguage; name: string }[] = [
   { code: 'ar', name: 'ARABIC' },
@@ -21,14 +24,15 @@ const LANGUAGES: { code: SupportedLanguage; name: string }[] = [
 export default function TranslatorView() {
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
-  const [fromLang, setFromLang] = useState<SupportedLanguage | 'auto'>('auto');
+  const [fromLang, setFromLang] = useState<SupportedLanguage>('ar');
   const [toLang, setToLang] = useState<SupportedLanguage>('am');
-  const [detectedLang, setDetectedLang] = useState<SupportedLanguage>('ar');
   const [copied, setCopied] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { speak, stop: stopSpeaking, isSpeaking } = useTextToSpeech();
+  const { speak, stop: stopSpeaking, isSpeaking, convertToPhonetic } = useTextToSpeech();
   
   const handleSpeechResult = React.useCallback((text: string) => {
     setInputText(prev => prev ? `${prev} ${text}` : text);
@@ -36,7 +40,7 @@ export default function TranslatorView() {
 
   const { isListening, isSupported: isSpeechSupported, startListening, stopListening } = useSpeechRecognition({
     onResult: handleSpeechResult,
-    lang: fromLang === 'auto' ? (detectedLang === 'ar' ? 'ar-SA' : 'en-US') : (fromLang === 'ar' ? 'ar-SA' : 'en-US')
+    lang: fromLang === 'ar' ? 'ar-SA' : 'en-US'
   });
 
   useEffect(() => {
@@ -50,18 +54,9 @@ export default function TranslatorView() {
       const errors = validateInput(inputText, fromLang);
       setValidationErrors(errors);
 
-      let currentFrom = fromLang;
-      if (fromLang === 'auto') {
-        const isAr = isArabicText(inputText);
-        currentFrom = isAr ? 'ar' : 'en';
-        setDetectedLang(currentFrom as SupportedLanguage);
-      } else {
-        setDetectedLang(fromLang as SupportedLanguage);
-      }
-
       setIsTranslating(true);
       try {
-        const result = await translate(inputText, currentFrom as SupportedLanguage, toLang);
+        const result = await translate(inputText, fromLang, toLang);
         setOutputText(result);
       } catch (e) {
         console.error("Translation failed", e);
@@ -81,14 +76,9 @@ export default function TranslatorView() {
   };
 
   const swapLanguages = () => {
-    if (fromLang === 'auto') {
-      setFromLang(toLang);
-      setToLang(detectedLang);
-    } else {
-      const temp = fromLang;
-      setFromLang(toLang);
-      setToLang(temp);
-    }
+    const temp = fromLang;
+    setFromLang(toLang);
+    setToLang(temp);
   };
 
   const applySuggestion = (error: ValidationError) => {
@@ -101,7 +91,7 @@ export default function TranslatorView() {
     if (isSpeaking) {
       stopSpeaking();
     } else {
-      speak(inputText, fromLang === 'auto' ? detectedLang : fromLang);
+      speak(inputText, fromLang === 'am' ? 'am' : 'ar');
     }
   };
 
@@ -109,8 +99,27 @@ export default function TranslatorView() {
     if (isSpeaking) {
       stopSpeaking();
     } else {
-      speak(outputText, toLang);
+      speak(outputText, toLang === 'am' ? 'am' : 'ar');
     }
+  };
+
+  const downloadAudio = async (text: string, lang: string) => {
+    let textToFetch = text;
+    let voiceLang = lang === 'am' ? 'ar' : lang;
+
+    if (lang === 'am') {
+      textToFetch = convertToPhonetic(text);
+    }
+
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(textToFetch)}&tl=${voiceLang}&client=tw-ob`;
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `audio_${lang}.mp3`;
+    link.target = "_blank"; // Fallback for browsers that block direct download from Google
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleMicClick = () => {
@@ -119,6 +128,53 @@ export default function TranslatorView() {
     } else {
       startListening();
     }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File too large. Max size is 10MB.");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      let text = "";
+      if (file.name.endsWith('.pdf')) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          fullText += content.items.map((item: any) => item.str).join(" ") + "\n";
+        }
+        text = fullText;
+      } else {
+        text = await file.text();
+      }
+      setInputText(text);
+    } catch (error) {
+      console.error("File read error:", error);
+      alert("Failed to read file.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const downloadTranslation = () => {
+    if (!outputText) return;
+    const blob = new Blob([outputText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `translated_${toLang}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -132,7 +188,6 @@ export default function TranslatorView() {
             onChange={(e) => setFromLang(e.target.value as any)}
             className="w-full bg-black/30 text-xs font-black tracking-widest text-neon-cyan focus:outline-none cursor-pointer p-3 rounded-xl appearance-none border border-white/5 hover:border-neon-cyan/30 transition-all uppercase"
           >
-            <option value="auto">Auto-Detect ({detectedLang.toUpperCase()})</option>
             {LANGUAGES.map(lang => (
               <option key={lang.code} value={lang.code}>{lang.name}</option>
             ))}
@@ -185,6 +240,22 @@ export default function TranslatorView() {
           />
           
           <div className="absolute top-6 right-6 flex items-center gap-3">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+              accept=".pdf,.txt,.md"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="p-3 rounded-xl bg-white/5 text-muted-grey hover:text-neon-cyan hover:bg-neon-cyan/10 transition-all active:scale-95 border border-white/10"
+              title="Upload PDF, TXT, or MD"
+            >
+              <Upload size={18} className={isUploading ? "animate-bounce" : ""} />
+            </button>
+
             {inputText && (
               <button
                 onClick={handleInputTTS}
@@ -194,7 +265,7 @@ export default function TranslatorView() {
               </button>
             )}
 
-            {isSpeechSupported && (fromLang === 'ar' || (fromLang === 'auto' && detectedLang === 'ar')) && (
+            {isSpeechSupported && (fromLang === 'ar') && (
               <button
                 onClick={handleMicClick}
                 className={cn(
@@ -288,7 +359,7 @@ export default function TranslatorView() {
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-muted-grey/30 gap-4 mt-4">
                 <Sparkles size={32} />
-                <span className="text-xs font-black tracking-widest uppercase">Awaiting Sequence Input</span>
+                <span className="text-sm font-black tracking-widest uppercase">Awaiting Sequence Input</span>
               </div>
             )}
           </div>
@@ -296,29 +367,48 @@ export default function TranslatorView() {
           <div className="bg-black/40 p-4 px-6 flex justify-between items-center border-t border-white/5">
             <div className="flex gap-2">
               {outputText && (
-                <button
-                  onClick={handleOutputTTS}
-                  className="p-3 rounded-xl bg-white/5 hover:bg-neon-cyan/10 text-muted-grey hover:text-neon-cyan transition-all border border-white/5"
-                >
-                   <Volume2 size={18} className={isSpeaking ? "text-neon-cyan animate-pulse" : ""} />
-                </button>
+                <>
+                  <button
+                    onClick={handleOutputTTS}
+                    className="p-3 rounded-xl bg-white/5 hover:bg-neon-cyan/10 text-muted-grey hover:text-neon-cyan transition-all border border-white/5"
+                    title="Listen"
+                  >
+                     <Volume2 size={18} className={isSpeaking ? "text-neon-cyan animate-pulse" : ""} />
+                  </button>
+                  <button
+                    onClick={() => downloadAudio(outputText, toLang)}
+                    className="p-3 rounded-xl bg-white/5 hover:bg-neon-cyan/10 text-muted-grey hover:text-neon-cyan transition-all border border-white/5"
+                    title="Download Audio"
+                  >
+                     <Music size={18} />
+                  </button>
+                  <button
+                    onClick={downloadTranslation}
+                    className="p-3 rounded-xl bg-white/5 hover:bg-neon-cyan/10 text-muted-grey hover:text-neon-cyan transition-all border border-white/5"
+                    title="Download Translation"
+                  >
+                     <Download size={18} />
+                  </button>
+                </>
               )}
             </div>
 
-            <button
-              onClick={handleCopy}
-              disabled={!outputText}
-              className="flex items-center gap-2.5 px-6 py-3 rounded-xl bg-neon-cyan/10 hover:bg-neon-cyan disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs font-black tracking-widest text-neon-cyan hover:text-deep-space border border-neon-cyan/20 uppercase"
-            >
-              {copied ? (
-                <span className="text-bright-white">INITIALIZED</span>
-              ) : (
-                <>
-                  <Copy size={14} />
-                  <span>TRANSMIT</span>
-                </>
-              )}
-            </button>
+            <div className="flex gap-2">
+               <button
+                onClick={handleCopy}
+                disabled={!outputText}
+                className="flex items-center gap-2.5 px-6 py-3 rounded-xl bg-neon-cyan/10 hover:bg-neon-cyan disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs font-black tracking-widest text-neon-cyan hover:text-deep-space border border-neon-cyan/20 uppercase"
+              >
+                {copied ? (
+                  <span className="text-bright-white">INITIALIZED</span>
+                ) : (
+                  <>
+                    <Copy size={14} />
+                    <span>TRANSMIT</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

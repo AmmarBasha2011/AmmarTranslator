@@ -1,6 +1,7 @@
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
-import { translateText, Language } from './src/services/translation';
+import { translateText } from './src/services/gemini';
+import { translateToArabicToAmmar, translateAmmarToArabic } from './src/services/translator';
 import 'dotenv/config';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -20,22 +21,28 @@ app.get('/api/translate', async (req, res) => {
     return res.status(400).json({ error: 'Missing text parameter' });
   }
 
-  if (!from || typeof from !== 'string' || !to || typeof to !== 'string') {
-    return res.status(400).json({ error: 'Missing from/to language parameters' });
-  }
-
-  const supportedLanguages = ['en', 'ar', 'am', 'fr', 'tr', 'de', 'es'];
-  const source = (from as string).toLowerCase();
-  const target = (to as string).toLowerCase();
-
-  if (!supportedLanguages.includes(source) || !supportedLanguages.includes(target)) {
-    return res.status(400).json({ 
-      error: `Unsupported language pair. Supported: ${supportedLanguages.join(', ')}` 
-    });
-  }
-
   try {
-    const result = await translateText(text, source as Language, target as Language);
+    let result = '';
+    const source = (from as string).toLowerCase();
+    const target = (to as string).toLowerCase();
+
+    if (source === 'ar' && target === 'am') {
+      result = translateToArabicToAmmar(text);
+    } else if (source === 'am' && target === 'ar') {
+      result = translateAmmarToArabic(text);
+    } else if (source === 'en' && target === 'am') {
+      const arabic = await translateText(text, 'en', 'ar');
+      result = translateToArabicToAmmar(arabic);
+    } else if (source === 'am' && target === 'en') {
+      const arabic = translateAmmarToArabic(text);
+      result = await translateText(arabic, 'ar', 'en');
+    } else if (source === 'en' && target === 'ar') {
+       result = await translateText(text, 'en', 'ar');
+    } else if (source === 'ar' && target === 'en') {
+       result = await translateText(text, 'ar', 'en');
+    } else {
+      return res.status(400).json({ error: 'Unsupported language pair. Supported: ar, am, en' });
+    }
 
     res.json({
       text,
@@ -59,17 +66,10 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     // Serve static files in production
-    const distPath = path.resolve(__dirname, 'dist');
-    app.use(express.static(distPath));
-    
-    // API routes are already defined above, so they will be hit first.
+    app.use(express.static(path.join(__dirname, 'dist')));
     // Fallback for SPA
     app.get('*', (req, res) => {
-      // Check if it's an API request that didn't match
-      if (req.path.startsWith('/api/')) {
-        return res.status(404).json({ error: 'API endpoint not found' });
-      }
-      res.sendFile(path.join(distPath, 'index.html'));
+        res.sendFile(path.join(__dirname, 'dist', 'index.html'));
     });
   }
 

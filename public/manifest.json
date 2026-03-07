@@ -1,0 +1,16 @@
+{
+  "name": "Ammar Translator",
+  "short_name": "Ammar",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "description": "Translate Arabic to Ammar Language and learn with AI.",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

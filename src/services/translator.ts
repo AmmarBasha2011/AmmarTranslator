@@ -37,9 +37,16 @@ function normalizeArabicGrammar(word: string): string {
   return word;
 }
 
+function stripTashkeel(text: string): string {
+  return text.replace(/[\u064B-\u065F\u0670]/g, '');
+}
+
 function translateWordToAmmar(word: string): string {
-  // 0. Normalize Grammar (Always Nominative)
-  const normalizedWord = normalizeArabicGrammar(word);
+  // 0. Strip Tashkeel (Diacritics)
+  const cleanWord = stripTashkeel(word);
+
+  // 1. Normalize Grammar (Always Nominative)
+  const normalizedWord = normalizeArabicGrammar(cleanWord);
 
   let ammarWord = '';
   let hasMax = false;

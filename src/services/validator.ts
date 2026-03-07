@@ -75,10 +75,11 @@ export function validateArabicInput(text: string): ValidationError[] {
 
     // Check 3: Grammar (Nominative Case)
     if (word.endsWith('ين')) {
+      const base = word.slice(0, -2);
       errors.push({
         word,
-        message: "Ammar Language uses Nominative case (Al-Raf') only.",
-        suggestion: word.slice(0, -2) + 'ون',
+        message: "Ammar Language uses Nominative case (Al-Raf') only. Use 'ون' for plural or 'ان' for dual.",
+        suggestion: base + 'ون', // Default to plural as it's more common, but message explains both
         severity: 'warning',
         index
       });
@@ -145,9 +146,11 @@ export function validateAmmarInput(text: string): ValidationError[] {
     // Let's iterate through the string and group base+modifiers.
     
     // Regex to match a base char + optional modifiers
-    // Base chars are a-z, A-Z. Modifiers are \u0300-\u036F\u1DC0-\u1DFF etc.
-    // Simplified: [a-zA-Z][\u0300-\u036F\u1d43]*
-    const charRegex = /[a-zA-Z][\u0300-\u036F\u1d43]*/g;
+    // Base chars are a-z, A-Z, and special chars like 'ş'.
+    // We need to be inclusive of all characters that can be base characters in Ammar.
+    // Looking at ARABIC_TO_AMMAR, we have a-z, A-Z, and 'ş' (\u015F).
+    // Let's use a broader range or explicit list.
+    const charRegex = /[a-zA-Z\u015F][\u0300-\u036F\u1d43]*/g;
     const matches = tempWord.match(charRegex);
     
     if (!matches) {

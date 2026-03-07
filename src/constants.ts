@@ -131,7 +131,7 @@ export const COMMON_WORDS = new Set([
 ]);
 
 // Vowel Characters (Rule: Add 'mt' prefix if present)
-export const VOWEL_CHARS = new Set(['أ', 'ا', 'ة', 'ع', 'غ']);
+export const VOWEL_CHARS = new Set(['أ', 'ا', 'ة', 'ع', 'غ', 'إ', 'آ', 'ء', 'ؤ', 'ئ']);
 
 // Helper to check if a character is Arabic
 export function isArabicChar(char: string): boolean {

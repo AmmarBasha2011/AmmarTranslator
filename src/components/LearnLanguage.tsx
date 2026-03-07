@@ -1,13 +1,65 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Layers, HelpCircle } from 'lucide-react';
+import { BookOpen, Layers, HelpCircle, Sparkles, Loader2, WifiOff, AlertTriangle } from 'lucide-react';
 import { ARABIC_TO_AMMAR, MAX_CHARS, MIX_CHARS, VOWEL_CHARS } from '../constants';
 import Flashcards from './Flashcards';
 import Quiz from './Quiz';
+import { generateQuiz, generateFlashcards, QuizQuestion, Flashcard } from '../services/gemini';
 
 export default function LearnLanguage() {
   const [activeTab, setActiveTab] = useState<'guide' | 'flashcards' | 'quiz'>('guide');
+  const [level, setLevel] = useState<'beginner' | 'intermediate' | 'advanced' | 'extreme'>('beginner');
+  const [count, setCount] = useState(5);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[] | undefined>(undefined);
+  const [flashcards, setFlashcards] = useState<Flashcard[] | undefined>(undefined);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleGenerate = async () => {
+    if (!navigator.onLine) {
+      setError("AI Features required internet connection");
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
+    setIsGenerating(true);
+    setProgress(0);
+    setError(null);
+
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 90) return prev;
+        return prev + 10;
+      });
+    }, 500);
+
+    try {
+      if (activeTab === 'quiz') {
+        const questions = await generateQuiz(level, count);
+        if (questions && questions.length > 0) {
+          setQuizQuestions(questions);
+        }
+      } else if (activeTab === 'flashcards') {
+        const cards = await generateFlashcards(level, count);
+        if (cards && cards.length > 0) {
+          setFlashcards(cards);
+        }
+      }
+      setProgress(100);
+    } catch (error) {
+      console.error("Failed to generate content", error);
+      setError("Failed to generate content. Please try again.");
+    } finally {
+      clearInterval(progressInterval);
+      setTimeout(() => {
+        setIsGenerating(false);
+        setProgress(0);
+      }, 500);
+    }
+  };
 
   const families = [
     {
@@ -43,11 +95,11 @@ export default function LearnLanguage() {
     <div className="w-full max-w-4xl mx-auto space-y-8 p-2 pb-20">
       
       {/* Sub-Navigation */}
-      <div className="flex justify-center mb-8">
-        <div className="flex bg-deep-blue-900/50 p-1 rounded-xl border border-white/5">
+      <div className="flex flex-col xl:flex-row justify-between items-center gap-4 mb-8">
+        <div className="flex bg-deep-blue-900/50 p-1 rounded-xl border border-white/5 overflow-x-auto max-w-full">
           <button
             onClick={() => setActiveTab('guide')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'guide' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -56,7 +108,7 @@ export default function LearnLanguage() {
           </button>
           <button
             onClick={() => setActiveTab('flashcards')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'flashcards' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -65,7 +117,7 @@ export default function LearnLanguage() {
           </button>
           <button
             onClick={() => setActiveTab('quiz')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'quiz' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -73,7 +125,84 @@ export default function LearnLanguage() {
             Quiz
           </button>
         </div>
+
+        {/* AI Controls (Only for Flashcards & Quiz) */}
+        {activeTab !== 'guide' && (
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+             <div className="flex items-center gap-2 bg-deep-blue-900/30 p-1 rounded-xl border border-white/5 w-full sm:w-auto">
+              <select 
+                value={level}
+                onChange={(e) => setLevel(e.target.value as any)}
+                className="bg-transparent text-sm text-slate-300 px-3 py-2 rounded-lg focus:outline-none focus:bg-white/5 border-r border-white/5"
+              >
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+                <option value="extreme">Extreme</option>
+              </select>
+              
+              <select 
+                value={count}
+                onChange={(e) => setCount(Number(e.target.value))}
+                className="bg-transparent text-sm text-slate-300 px-3 py-2 rounded-lg focus:outline-none focus:bg-white/5 border-r border-white/5"
+              >
+                <option value="5">5 Items</option>
+                <option value="10">10 Items</option>
+                <option value="15">15 Items</option>
+                <option value="20">20 Items</option>
+              </select>
+
+              <button
+                onClick={handleGenerate}
+                disabled={isGenerating}
+                className="flex items-center gap-2 px-4 py-2 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20 rounded-lg text-sm font-medium transition-all disabled:opacity-50 whitespace-nowrap"
+              >
+                {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                <span className="hidden sm:inline">Generate</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Error Message */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl flex items-center gap-2 text-sm"
+          >
+            <WifiOff size={16} />
+            {error}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Progress Bar */}
+      <AnimatePresence>
+        {isGenerating && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="bg-deep-blue-900/50 rounded-full h-2 w-full overflow-hidden">
+              <motion.div 
+                className="h-full bg-gradient-to-r from-neon-blue to-neon-cyan"
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.5 }}
+              />
+            </div>
+            <p className="text-xs text-center text-slate-400 mt-2 animate-pulse">
+              Generating {count} {activeTab} for {level} level... ({progress}%)
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence mode="wait">
         {activeTab === 'guide' && (
@@ -248,6 +377,8 @@ export default function LearnLanguage() {
                     Ammar Language strictly follows the Nominative case (Al-Raf').
                     <br/>
                     <span className="text-yellow-400">"طالبين"</span> (Accusative) becomes <span className="text-neon-cyan">"طالبون"</span> (Nominative).
+                    <br/>
+                    <span className="text-yellow-400">"لاعبين"</span> (Dual Accusative) becomes <span className="text-neon-cyan">"لاعبان"</span> (Dual Nominative).
                   </p>
                 </div>
               </div>
@@ -292,7 +423,7 @@ export default function LearnLanguage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
           >
-            <Flashcards />
+            <Flashcards cards={flashcards} />
           </motion.div>
         )}
 
@@ -303,7 +434,7 @@ export default function LearnLanguage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
           >
-            <Quiz />
+            <Quiz questions={quizQuestions} />
           </motion.div>
         )}
       </AnimatePresence>

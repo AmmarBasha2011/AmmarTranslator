@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Keyboard, Check, FileText, Code, Copy, Globe, Info } from 'lucide-react';
+import { BookOpen, Keyboard, Check, FileText, Code, Copy, Globe, Info, Zap, Layers, Cpu } from 'lucide-react';
 import { ARABIC_TO_AMMAR, MAX_CHARS, MIX_CHARS, VOWEL_CHARS } from '../constants';
 import { cn } from '../lib/utils';
 
@@ -33,6 +33,34 @@ export default function LearnLanguage() {
     setCopiedKeyboard(true);
     setTimeout(() => setCopiedKeyboard(false), 2000);
   };
+
+  const families = [
+    {
+      name: "Basic Family",
+      description: "Characters with no modifiers. Pure and simple.",
+      chars: ['ب', 'ت', 'ج', 'د', 'ر', 'ز', 'س', 'ف', 'ك', 'ل', 'م', 'ن', 'ه', 'و', 'ي', 'ا'],
+      color: "text-slate-500"
+    },
+    {
+      name: "Max Family",
+      description: "Characters with one modifier (Yoghashak, Multi, etc).",
+      chars: Array.from(MAX_CHARS).filter(c => !MIX_CHARS.has(c)),
+      color: "text-primary"
+    },
+    {
+      name: "Mix Family",
+      description: "Complex characters with multiple modifiers.",
+      chars: Array.from(MIX_CHARS),
+      color: "text-secondary"
+    }
+  ];
+
+  const operations = [
+    { name: "Yoghashak", symbol: "\u030A", desc: "Small circle above" },
+    { name: "Multi", symbol: "\u0331", desc: "Line below" },
+    { name: "Double", symbol: "\u0336", desc: "Strikethrough" },
+    { name: "Tikrar", symbol: "\u1d43", desc: "Small 'a' exponent" },
+  ];
 
   return (
     <div className="w-full space-y-6 pb-20">
@@ -84,22 +112,23 @@ export default function LearnLanguage() {
             <section className="bg-white p-6 rounded-3xl border border-border shadow-sm space-y-3">
               <h2 className="text-2xl font-bold text-slate-900 tracking-tight">The Ammar Protocol</h2>
               <p className="text-sm text-text-muted leading-relaxed">
-                A modern neural construct for Arabic semantic transformation. Built on geometric phoneme modification.
+                The Ammar Language is a neural construct based on geometric modification of Latin phonemes. It utilizes specific operations to transform base logic into complex Arabic semantic structures.
               </p>
             </section>
 
             {/* Protocol Stack */}
             <section className="bg-white rounded-3xl border border-border shadow-sm overflow-hidden">
               <div className="p-5 border-b border-border bg-slate-50/50 flex items-center gap-3">
-                <Info size={18} className="text-primary" />
-                <h3 className="font-bold text-sm uppercase tracking-wider">Logic Stack</h3>
+                <Cpu size={18} className="text-primary" />
+                <h3 className="font-bold text-sm uppercase tracking-wider">Neural Logic Stack</h3>
               </div>
               <div className="p-5 space-y-6">
                 {[
-                  { id: 'I', name: 'Grammar Shield', desc: 'Auto-normalization to Nominative case (Al-Raf\').', color: 'bg-blue-50 text-blue-600' },
-                  { id: 'II', name: 'Reflection Protocol', desc: 'Complete sequence reversal of the base word vector.', color: 'bg-indigo-50 text-indigo-600' },
-                  { id: 'III', name: 'Scalar Mapping', desc: 'Length-based suffix injection (+LO/+RI).', color: 'bg-purple-50 text-purple-600' },
-                  { id: 'IV', name: 'Neural Vowels', desc: 'Vowel-detected prefix trigger (+MU).', color: 'bg-pink-50 text-pink-600' },
+                  { id: 'I', name: 'Grammar Shield', desc: 'Auto-normalization to Nominative case (Al-Raf\'). Converts endings like "يين" to "ون".', color: 'bg-blue-50 text-blue-600' },
+                  { id: 'II', name: 'Reflection Protocol', desc: 'The most critical stage. Reverses the entire base character sequence before processing.', color: 'bg-indigo-50 text-indigo-600' },
+                  { id: 'III', name: 'Scalar Mapping', desc: 'Length-based suffix injection. Even words get +LO, Odd words get +RI.', color: 'bg-purple-50 text-purple-600' },
+                  { id: 'IV', name: 'Mix/Max Detection', desc: 'Injects +AX for complex characters and +UM for maximum load characters.', color: 'bg-pink-50 text-pink-600' },
+                  { id: 'V', name: 'Neural Vowels', desc: 'Vowel-detected prefix trigger. Words containing vowels are prefixed with +MU.', color: 'bg-orange-50 text-orange-600' },
                 ].map((step, idx) => (
                   <div key={idx} className="flex gap-4">
                     <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0", step.color)}>
@@ -107,7 +136,7 @@ export default function LearnLanguage() {
                     </div>
                     <div>
                       <h4 className="font-bold text-sm text-slate-800">{step.name}</h4>
-                      <p className="text-xs text-text-muted mt-0.5">{step.desc}</p>
+                      <p className="text-xs text-text-muted mt-0.5 leading-relaxed">{step.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -116,36 +145,168 @@ export default function LearnLanguage() {
 
             {/* Practical Example */}
             <section className="bg-white p-6 rounded-3xl border border-border shadow-sm">
-              <h3 className="font-bold text-sm uppercase tracking-wider mb-4">Sample Trace</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                  <span className="text-xs font-bold text-text-muted uppercase">Input</span>
-                  <span className="text-lg font-bold text-slate-800">أبي</span>
+              <div className="flex items-center gap-3 mb-4">
+                <Zap size={18} className="text-primary" />
+                <h3 className="font-bold text-sm uppercase tracking-wider">Sample Traces</h3>
+              </div>
+
+              <div className="space-y-8">
+                {/* Example 1 */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between px-3 py-1 bg-slate-50 rounded-lg">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Vector A: [أبي]</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
+                      <span className="text-xs text-text-muted">I. Input</span>
+                      <span className="text-sm font-bold">أبي</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100">
+                      <span className="text-xs text-indigo-700">II. Reflect</span>
+                      <span className="text-sm font-bold text-indigo-900">iba</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-primary/5 rounded-2xl border border-primary/10">
+                      <span className="text-xs text-primary">III. Scalar</span>
+                      <span className="text-sm font-bold">ibari (Odd 3)</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary to-secondary rounded-2xl text-white shadow-lg">
+                      <span className="text-xs font-bold uppercase">Result</span>
+                      <span className="text-lg font-bold">muibari</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2 p-3 bg-primary/5 rounded-2xl border border-primary/10">
-                   <div className="flex items-center justify-between">
-                     <span className="text-[10px] font-bold text-primary uppercase">I. Grammar</span>
-                     <span className="text-xs font-medium italic">No change</span>
-                   </div>
-                   <div className="flex items-center justify-between">
-                     <span className="text-[10px] font-bold text-primary uppercase">II. Reflection</span>
-                     <span className="text-xs font-bold">iba</span>
-                   </div>
-                   <div className="flex items-center justify-between">
-                     <span className="text-[10px] font-bold text-primary uppercase">III. Suffixes</span>
-                     <span className="text-xs font-bold">iba + ri</span>
-                   </div>
-                   <div className="flex items-center justify-between">
-                     <span className="text-[10px] font-bold text-primary uppercase">IV. Prefix</span>
-                     <span className="text-xs font-bold">mu + ibari</span>
-                   </div>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary to-secondary rounded-2xl text-white shadow-lg shadow-primary/20">
-                  <span className="text-xs font-bold uppercase">Result</span>
-                  <span className="text-lg font-bold">muibari</span>
+
+                {/* Example 2 */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between px-3 py-1 bg-slate-50 rounded-lg">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Vector B: [عمار]</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
+                      <span className="text-xs text-text-muted">I. Input</span>
+                      <span className="text-sm font-bold">عمار</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100">
+                      <span className="text-xs text-indigo-700">II. Reflect</span>
+                      <span className="text-sm font-bold text-indigo-900">raMaᵃ</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-primary/5 rounded-2xl border border-primary/10">
+                      <span className="text-xs text-primary">III. Scalar+Max</span>
+                      <span className="text-sm font-bold">raMaᵃloum (Even 4)</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary to-secondary rounded-2xl text-white shadow-lg">
+                      <span className="text-xs font-bold uppercase">Result</span>
+                      <span className="text-lg font-bold">muraMaᵃloum</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>
+
+            {/* Modifiers */}
+            <section className="bg-white p-6 rounded-3xl border border-border shadow-sm">
+              <h3 className="font-bold text-sm uppercase tracking-wider mb-6">Geometric Modifiers</h3>
+              <div className="grid grid-cols-1 gap-4">
+                {operations.map((op) => (
+                  <div key={op.name} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-primary/20 transition-all">
+                    <div className="w-12 h-12 flex items-center justify-center bg-white rounded-xl text-2xl font-mono text-primary border border-border shadow-sm">
+                      ◌{op.symbol}
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-900 text-xs uppercase tracking-widest">{op.name}</div>
+                      <div className="text-[10px] text-text-muted font-medium mt-0.5">{op.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Neural Vowels */}
+            <section className="bg-white p-6 rounded-3xl border border-border shadow-sm">
+              <h3 className="font-bold text-sm uppercase tracking-wider mb-6">Neural Vowels</h3>
+              <div className="grid grid-cols-4 gap-2">
+                {Array.from(VOWEL_CHARS).map((char) => (
+                  <div key={char} className="flex flex-col items-center justify-center aspect-square bg-slate-50 rounded-xl border border-slate-100 hover:border-secondary/30 transition-all">
+                    <span className="text-xl font-bold text-slate-800">{char}</span>
+                    <span className="text-[10px] font-bold text-secondary mt-1 opacity-50">{ARABIC_TO_AMMAR[char]}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 p-4 bg-secondary/5 rounded-2xl border border-secondary/10 text-center">
+                 <span className="text-[10px] font-bold tracking-widest text-secondary uppercase">Vowel Prefix Requirement:</span>
+                 <div className="text-2xl font-bold text-slate-900 mt-1">"MU"</div>
+              </div>
+            </section>
+
+            {/* Families */}
+            <section className="space-y-4">
+              <h3 className="font-bold text-sm uppercase tracking-wider px-2">Char Modules</h3>
+              <div className="grid grid-cols-1 gap-4">
+                {families.map((family) => (
+                  <div key={family.name} className="bg-white rounded-3xl border border-border shadow-sm overflow-hidden">
+                    <div className="p-4 border-b border-border bg-slate-50/50 flex items-center justify-between">
+                      <div>
+                        <h4 className={`text-xs font-bold tracking-widest uppercase ${family.color}`}>{family.name}</h4>
+                        <p className="text-[9px] text-text-muted font-bold uppercase tracking-tighter mt-0.5">{family.description}</p>
+                      </div>
+                      <Globe size={16} className={cn("opacity-20", family.color)} />
+                    </div>
+                    <div className="p-4 flex flex-wrap gap-2">
+                      {family.chars.map((char) => (
+                        <div key={char} className="flex flex-col items-center justify-center w-12 h-12 bg-slate-50 rounded-xl border border-border hover:border-primary/30 transition-all">
+                          <span className="text-lg text-slate-800">{char}</span>
+                          <span className="text-[9px] font-bold text-text-muted uppercase mt-0.5 opacity-50">{ARABIC_TO_AMMAR[char]}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Complete Matrix Table */}
+            <section className="bg-white rounded-3xl border border-border shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-border flex items-center justify-between bg-slate-50/50">
+                <h3 className="font-bold text-sm uppercase tracking-wider">Logic Mapping Matrix</h3>
+                <Layers size={18} className="text-primary opacity-50" />
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead className="bg-slate-100 text-text-muted font-bold uppercase tracking-widest text-[9px]">
+                    <tr>
+                      <th className="px-5 py-3 border-b border-border">Signal</th>
+                      <th className="px-5 py-3 border-b border-border">Process</th>
+                      <th className="px-5 py-3 border-b border-border">Sector</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {Object.entries(ARABIC_TO_AMMAR).map(([ar, am]) => {
+                      let family = "Basic";
+                      if (MIX_CHARS.has(ar)) family = "Mix";
+                      else if (MAX_CHARS.has(ar)) family = "Max";
+
+                      return (
+                        <tr key={ar} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-5 py-3 font-bold text-slate-800 text-lg">{ar}</td>
+                          <td className="px-5 py-3 font-bold text-primary text-lg tracking-tight">{am}</td>
+                          <td className="px-5 py-3">
+                            <span className={cn(
+                              "text-[9px] font-bold tracking-widest uppercase px-2 py-1 rounded-md border",
+                              family === 'Basic' ? 'bg-slate-50 text-slate-500 border-slate-200' :
+                              family === 'Max' ? 'bg-primary/5 text-primary border-primary/10' :
+                              'bg-secondary/5 text-secondary border-secondary/10'
+                            )}>
+                              {family}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
           </motion.div>
         )}
 

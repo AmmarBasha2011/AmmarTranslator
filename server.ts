@@ -59,10 +59,17 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     // Serve static files in production
-    app.use(express.static(path.join(__dirname, 'dist')));
+    const distPath = path.resolve(__dirname, 'dist');
+    app.use(express.static(distPath));
+    
+    // API routes are already defined above, so they will be hit first.
     // Fallback for SPA
     app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+      // Check if it's an API request that didn't match
+      if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'API endpoint not found' });
+      }
+      res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 

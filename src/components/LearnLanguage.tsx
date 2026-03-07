@@ -381,6 +381,22 @@ export default function LearnLanguage() {
                     <span className="text-yellow-400">"لاعبين"</span> (Dual Accusative) becomes <span className="text-neon-cyan">"لاعبان"</span> (Dual Nominative).
                   </p>
                 </div>
+
+                <div className="relative pl-6 border-l-2 border-red-500/30">
+                  <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-deep-blue-950 border-2 border-red-500"></div>
+                  <h4 className="font-bold text-white mb-2">Rule 6: No Diacritics (Tashkeel)</h4>
+                  <p className="text-slate-300 text-sm mb-3">
+                    <span className="text-red-400 font-bold block mb-1">Error: The Ammar language does not accept diacritics or Tanween.</span>
+                    <span className="text-slate-400 italic">"اللغة العمارية لا تقبل بالتشكيل ولا بالتنوين"</span>
+                  </p>
+                  <div className="bg-red-500/10 p-3 rounded-lg text-center border border-red-500/20">
+                     <div className="text-sm text-red-300">
+                       <span className="line-through opacity-50">مُحَمَّدٌ</span>
+                       <span className="mx-2">→</span>
+                       <span className="text-white font-bold">محمد</span>
+                     </div>
+                  </div>
+                </div>
               </div>
 
               <div className="mt-8 bg-black/20 p-4 rounded-xl border border-white/5">

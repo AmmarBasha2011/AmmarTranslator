@@ -27,6 +27,7 @@ export const MIX_CHARS = new Set([
   'ص', // s + double + yoghashak
   'ظ', // T + double + multi
   'غ', // a + tikrar + yoghashak
+  'ع', // a + tikrar
 ]);
 
 // Mapping: Arabic -> Ammar

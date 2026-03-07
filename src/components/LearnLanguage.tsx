@@ -1,11 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Layers, HelpCircle, Sparkles, Loader2, WifiOff, AlertTriangle, Keyboard, Copy, Check, FileText, Code } from 'lucide-react';
+import { BookOpen, Keyboard, Check, FileText, Code, Copy, Globe } from 'lucide-react';
 import { ARABIC_TO_AMMAR, MAX_CHARS, MIX_CHARS, VOWEL_CHARS } from '../constants';
-import Flashcards from './Flashcards';
-import Quiz from './Quiz';
-import { generateQuiz, generateFlashcards, QuizQuestion, Flashcard } from '../services/gemini';
+import { cn } from '../lib/utils';
 
 const KEYBOARD_LAYOUT = `OK_Layout_Begin
 Name:AmmarLang
@@ -28,14 +26,7 @@ Ṯ̶Z̊S̊ŞMNO
 OK_Layout_End`;
 
 export default function LearnLanguage() {
-  const [activeTab, setActiveTab] = useState<'guide' | 'flashcards' | 'quiz' | 'keyboard' | 'docs'>('guide');
-  const [level, setLevel] = useState<'beginner' | 'intermediate' | 'advanced' | 'extreme'>('beginner');
-  const [count, setCount] = useState(5);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[] | undefined>(undefined);
-  const [flashcards, setFlashcards] = useState<Flashcard[] | undefined>(undefined);
-  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'guide' | 'keyboard' | 'docs'>('guide');
   const [copiedKeyboard, setCopiedKeyboard] = useState(false);
 
   const handleCopyKeyboard = () => {
@@ -44,210 +35,70 @@ export default function LearnLanguage() {
     setTimeout(() => setCopiedKeyboard(false), 2000);
   };
 
-  const handleGenerate = async () => {
-    if (!navigator.onLine) {
-      setError("AI Features required internet connection");
-      setTimeout(() => setError(null), 3000);
-      return;
-    }
-
-    setIsGenerating(true);
-    setProgress(0);
-    setError(null);
-
-    // Simulate progress
-    const progressInterval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 90) return prev;
-        return prev + 10;
-      });
-    }, 500);
-
-    try {
-      if (activeTab === 'quiz') {
-        const questions = await generateQuiz(level, count);
-        if (questions && questions.length > 0) {
-          setQuizQuestions(questions);
-        }
-      } else if (activeTab === 'flashcards') {
-        const cards = await generateFlashcards(level, count);
-        if (cards && cards.length > 0) {
-          setFlashcards(cards);
-        }
-      }
-      setProgress(100);
-    } catch (error) {
-      console.error("Failed to generate content", error);
-      setError("Failed to generate content. Please try again.");
-    } finally {
-      clearInterval(progressInterval);
-      setTimeout(() => {
-        setIsGenerating(false);
-        setProgress(0);
-      }, 500);
-    }
-  };
-
   const families = [
     {
       name: "Basic Family",
       description: "Characters with no modifiers. Pure and simple.",
       chars: ['ب', 'ت', 'ج', 'د', 'ر', 'ز', 'س', 'ف', 'ك', 'ل', 'م', 'ن', 'ه', 'و', 'ي', 'ا'],
-      color: "text-slate-300"
+      color: "text-muted-grey"
     },
     {
       name: "Max Family",
       description: "Characters with one modifier (Yoghashak, Multi, etc).",
       chars: Array.from(MAX_CHARS).filter(c => !MIX_CHARS.has(c)),
-      color: "text-neon-blue"
+      color: "text-neon-cyan"
     },
     {
       name: "Mix Family",
       description: "Complex characters with multiple modifiers.",
       chars: Array.from(MIX_CHARS),
-      color: "text-neon-cyan"
+      color: "text-electric-purple"
     }
   ];
 
   const operations = [
-    { name: "Yoghashak", symbol: "\u030A", desc: "Small circle above (or overline for H)" },
+    { name: "Yoghashak", symbol: "\u030A", desc: "Small circle above" },
     { name: "Multi", symbol: "\u0331", desc: "Line below" },
     { name: "Double", symbol: "\u0336", desc: "Strikethrough" },
     { name: "Tikrar", symbol: "\u1d43", desc: "Small 'a' exponent" },
   ];
 
-  const vowels = Array.from(VOWEL_CHARS);
-
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-8 p-2 pb-20">
+    <div className="w-full max-w-4xl mx-auto space-y-8 p-2 pb-24">
       
-      {/* Sub-Navigation */}
-      <div className="flex flex-col xl:flex-row justify-between items-center gap-4 mb-8">
-        <div className="flex bg-deep-blue-900/50 p-1 rounded-xl border border-white/5 overflow-x-auto max-w-full">
-          <button
-            onClick={() => setActiveTab('guide')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === 'guide' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <BookOpen size={16} />
-            Guide
-          </button>
-          <button
-            onClick={() => setActiveTab('flashcards')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === 'flashcards' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Layers size={16} />
-            Flashcards
-          </button>
-          <button
-            onClick={() => setActiveTab('quiz')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === 'quiz' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <HelpCircle size={16} />
-            Quiz
-          </button>
-          <button
-            onClick={() => setActiveTab('keyboard')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === 'keyboard' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Keyboard size={16} />
-            Keyboard
-          </button>
-          <button
-            onClick={() => setActiveTab('docs')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === 'docs' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <FileText size={16} />
-            Docs
-          </button>
-        </div>
-
-        {/* AI Controls (Only for Flashcards & Quiz) */}
-        {(activeTab === 'flashcards' || activeTab === 'quiz') && (
-          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-             <div className="flex items-center gap-2 bg-deep-blue-900/30 p-1 rounded-xl border border-white/5 w-full sm:w-auto">
-              <select 
-                value={level}
-                onChange={(e) => setLevel(e.target.value as any)}
-                className="bg-transparent text-sm text-slate-300 px-3 py-2 rounded-lg focus:outline-none focus:bg-white/5 border-r border-white/5"
-              >
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-                <option value="extreme">Extreme</option>
-              </select>
-              
-              <select 
-                value={count}
-                onChange={(e) => setCount(Number(e.target.value))}
-                className="bg-transparent text-sm text-slate-300 px-3 py-2 rounded-lg focus:outline-none focus:bg-white/5 border-r border-white/5"
-              >
-                <option value="5">5 Items</option>
-                <option value="10">10 Items</option>
-                <option value="15">15 Items</option>
-                <option value="20">20 Items</option>
-              </select>
-
-              <button
-                onClick={handleGenerate}
-                disabled={isGenerating}
-                className="flex items-center gap-2 px-4 py-2 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20 rounded-lg text-sm font-medium transition-all disabled:opacity-50 whitespace-nowrap"
-              >
-                {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-                <span className="hidden sm:inline">Generate</span>
-              </button>
-            </div>
-          </div>
-        )}
+      {/* Tab Switcher */}
+      <div className="flex bg-black/40 p-1.5 rounded-2xl border border-white/10 neo-blur w-fit mx-auto overflow-x-auto max-w-full">
+        <button
+          onClick={() => setActiveTab('guide')}
+          className={cn(
+            "flex items-center gap-2.5 px-6 py-3 rounded-xl text-xs font-black tracking-widest transition-all uppercase whitespace-nowrap",
+            activeTab === 'guide' ? 'bg-neon-cyan text-deep-space shadow-xl' : 'text-muted-grey hover:text-bright-white hover:bg-white/5'
+          )}
+        >
+          <BookOpen size={16} />
+          Protocol Guide
+        </button>
+        <button
+          onClick={() => setActiveTab('keyboard')}
+          className={cn(
+            "flex items-center gap-2.5 px-6 py-3 rounded-xl text-xs font-black tracking-widest transition-all uppercase whitespace-nowrap",
+            activeTab === 'keyboard' ? 'bg-electric-purple text-white shadow-xl' : 'text-muted-grey hover:text-bright-white hover:bg-white/5'
+          )}
+        >
+          <Keyboard size={16} />
+          Interface Matrix
+        </button>
+        <button
+          onClick={() => setActiveTab('docs')}
+          className={cn(
+            "flex items-center gap-2.5 px-6 py-3 rounded-xl text-xs font-black tracking-widest transition-all uppercase whitespace-nowrap",
+            activeTab === 'docs' ? 'bg-neon-cyan text-deep-space shadow-xl' : 'text-muted-grey hover:text-bright-white hover:bg-white/5'
+          )}
+        >
+          <FileText size={16} />
+          Terminal API
+        </button>
       </div>
-
-      {/* Error Message */}
-      <AnimatePresence>
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl flex items-center gap-2 text-sm"
-          >
-            <WifiOff size={16} />
-            {error}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Progress Bar */}
-      <AnimatePresence>
-        {isGenerating && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="bg-deep-blue-900/50 rounded-full h-2 w-full overflow-hidden">
-              <motion.div 
-                className="h-full bg-gradient-to-r from-neon-blue to-neon-cyan"
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.5 }}
-              />
-            </div>
-            <p className="text-xs text-center text-slate-400 mt-2 animate-pulse">
-              Generating {count} {activeTab} for {level} level... ({progress}%)
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <AnimatePresence mode="wait">
         {activeTab === 'guide' && (
@@ -259,64 +110,68 @@ export default function LearnLanguage() {
             className="space-y-8"
           >
             {/* Introduction */}
-            <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-white">The Ammar Language System</h2>
-              <p className="text-slate-300 leading-relaxed">
-                Ammar Language is a constructed language based on geometric modification of Latin characters. 
-                It uses a system of "Operations" to transform basic sounds into specific Arabic phonemes.
+            <section className="glass p-8 rounded-3xl border border-white/10 space-y-4">
+              <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase italic bg-clip-text text-transparent bg-gradient-to-r from-neon-cyan to-electric-purple">The Ammar Protocol</h2>
+              <p className="text-muted-grey leading-relaxed font-medium">
+                The Ammar Language is a neural construct based on geometric modification of Latin phonemes.
+                It utilizes specific operations to transform base logic into complex Arabic semantic structures.
               </p>
             </section>
 
-            {/* Operations */}
-            <section className="bg-deep-blue-900/50 rounded-2xl border border-white/10 p-6">
-              <h3 className="text-xl font-bold text-neon-blue mb-4">1. The Operations (Modifiers)</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {operations.map((op) => (
-                  <div key={op.name} className="flex items-center gap-4 bg-deep-blue-950/50 p-3 rounded-xl border border-white/5">
-                    <div className="w-12 h-12 flex items-center justify-center bg-white/5 rounded-lg text-2xl font-mono text-white">
-                      ◌{op.symbol}
+            {/* Operations Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <section className="glass p-8 rounded-3xl border border-white/10">
+                <h3 className="text-xl font-black text-neon-cyan mb-6 uppercase tracking-widest italic">1. Modifiers</h3>
+                <div className="grid grid-cols-1 gap-4">
+                  {operations.map((op) => (
+                    <div key={op.name} className="flex items-center gap-5 bg-black/40 p-4 rounded-2xl border border-white/5 hover:border-neon-cyan/30 transition-all group">
+                      <div className="w-14 h-14 flex items-center justify-center bg-neon-cyan/5 rounded-xl text-3xl font-mono text-neon-cyan group-hover:bg-neon-cyan/20 transition-all border border-neon-cyan/20">
+                        ◌{op.symbol}
+                      </div>
+                      <div>
+                        <div className="font-black text-bright-white text-xs uppercase tracking-widest">{op.name}</div>
+                        <div className="text-xs text-muted-grey font-medium mt-1">{op.desc}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-bold text-white">{op.name}</div>
-                      <div className="text-xs text-slate-400">{op.desc}</div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="glass p-8 rounded-3xl border border-white/10">
+                <h3 className="text-xl font-black text-electric-purple mb-6 uppercase tracking-widest italic">2. Neural Vowels</h3>
+                <div className="grid grid-cols-4 gap-3">
+                  {Array.from(VOWEL_CHARS).map((char) => (
+                    <div key={char} className="flex flex-col items-center justify-center aspect-square bg-black/40 rounded-2xl border border-electric-purple/20 hover:border-electric-purple/50 transition-all group">
+                      <span className="text-2xl font-black text-white">{char}</span>
+                      <span className="text-[10px] font-black text-electric-purple mt-1 opacity-50">{ARABIC_TO_AMMAR[char]}</span>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+                  ))}
+                </div>
+                <div className="mt-6 p-4 bg-electric-purple/10 rounded-2xl border border-electric-purple/20 text-center">
+                   <span className="text-[10px] font-black tracking-widest text-electric-purple uppercase">Vowel Prefix Requirement:</span>
+                   <div className="text-2xl font-black text-white mt-1">"MU"</div>
+                </div>
+              </section>
+            </div>
 
-            {/* Vowel Chart */}
-            <section className="bg-deep-blue-900/50 rounded-2xl border border-white/10 p-6">
-              <h3 className="text-xl font-bold text-purple-400 mb-4">2. Vowel Chart</h3>
-              <p className="text-sm text-slate-400 mb-4">
-                These characters are considered vowels in Ammar Language. If a word contains any of these, 
-                it must start with the prefix <span className="font-mono text-purple-400 bg-purple-500/10 px-1 rounded">mu</span>.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {vowels.map((char) => (
-                  <div key={char} className="flex flex-col items-center justify-center w-16 h-16 bg-deep-blue-950 rounded-xl border border-purple-500/30 shadow-lg shadow-purple-500/10">
-                    <span className="text-2xl font-bold text-white">{char}</span>
-                    <span className="text-xs font-mono text-purple-400 mt-1">{ARABIC_TO_AMMAR[char]}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Character Families */}
+            {/* Families */}
             <section className="space-y-6">
-              <h3 className="text-xl font-bold text-neon-blue">3. Character Families</h3>
-              <div className="grid gap-6">
+              <h3 className="text-xl font-black text-white uppercase tracking-widest italic px-4">3. Char Modules</h3>
+              <div className="grid grid-cols-1 gap-6">
                 {families.map((family) => (
-                  <div key={family.name} className="bg-deep-blue-900/30 rounded-2xl border border-white/10 p-6">
-                    <div className="mb-4">
-                      <h4 className={`text-lg font-bold ${family.color}`}>{family.name}</h4>
-                      <p className="text-sm text-slate-400">{family.description}</p>
+                  <div key={family.name} className="glass rounded-3xl border border-white/10 overflow-hidden">
+                    <div className="p-6 border-b border-white/5 bg-black/20 flex items-center justify-between">
+                      <div>
+                        <h4 className={`text-sm font-black tracking-widest uppercase ${family.color}`}>{family.name}</h4>
+                        <p className="text-[10px] text-muted-grey font-medium uppercase tracking-tighter mt-1">{family.description}</p>
+                      </div>
+                      <Globe size={20} className={cn("opacity-20", family.color)} />
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="p-6 flex flex-wrap gap-3">
                       {family.chars.map((char) => (
-                        <div key={char} className="flex flex-col items-center bg-deep-blue-950 p-2 rounded-lg min-w-[3rem] border border-white/5">
-                          <span className="text-lg text-white mb-1">{char}</span>
-                          <span className="text-xs font-mono text-neon-cyan/80">{ARABIC_TO_AMMAR[char]}</span>
+                        <div key={char} className="flex flex-col items-center justify-center w-14 h-14 bg-black/40 rounded-xl border border-white/5 hover:border-white/20 transition-all">
+                          <span className="text-xl text-white">{char}</span>
+                          <span className="text-[8px] font-black text-muted-grey uppercase mt-1 opacity-50">{ARABIC_TO_AMMAR[char]}</span>
                         </div>
                       ))}
                     </div>
@@ -325,19 +180,22 @@ export default function LearnLanguage() {
               </div>
             </section>
 
-            {/* The Matrix Dictionary */}
-            <section className="bg-deep-blue-900/50 rounded-2xl border border-white/10 overflow-hidden">
-              <div className="p-6 border-b border-white/10">
-                <h3 className="text-xl font-bold text-neon-blue">4. The Matrix Dictionary</h3>
-                <p className="text-sm text-slate-400 mt-1">Complete mapping of Arabic to Ammar characters</p>
+            {/* Matrix Table */}
+            <section className="glass rounded-3xl border border-white/10 overflow-hidden">
+              <div className="p-8 border-b border-white/5 flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-black text-white italic uppercase italic">4. Logic Mapping</h3>
+                  <p className="text-xs text-muted-grey mt-1 font-medium uppercase tracking-widest">Complete Translation Matrix</p>
+                </div>
+                <Code size={24} className="text-neon-cyan opacity-50" />
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-deep-blue-950 text-slate-400 font-medium">
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead className="bg-black/40 text-muted-grey font-black uppercase tracking-widest text-[10px]">
                     <tr>
-                      <th className="px-6 py-3">Arabic</th>
-                      <th className="px-6 py-3">Ammar</th>
-                      <th className="px-6 py-3">Family</th>
+                      <th className="px-8 py-5 border-b border-white/5">Signal</th>
+                      <th className="px-8 py-5 border-b border-white/5">Process</th>
+                      <th className="px-8 py-5 border-b border-white/5">Sector</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -347,15 +205,16 @@ export default function LearnLanguage() {
                       else if (MAX_CHARS.has(ar)) family = "Max";
                       
                       return (
-                        <tr key={ar} className="hover:bg-white/5 transition-colors">
-                          <td className="px-6 py-3 font-medium text-white text-lg">{ar}</td>
-                          <td className="px-6 py-3 font-mono text-neon-cyan text-lg">{am}</td>
-                          <td className="px-6 py-3">
-                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ring-1 ring-inset ${
-                              family === 'Basic' ? 'bg-slate-400/10 text-slate-400 ring-slate-400/20' :
-                              family === 'Max' ? 'bg-neon-blue/10 text-neon-blue ring-neon-blue/20' :
-                              'bg-neon-cyan/10 text-neon-cyan ring-neon-cyan/20'
-                            }`}>
+                        <tr key={ar} className="hover:bg-white/5 transition-colors group">
+                          <td className="px-8 py-4 font-black text-white text-xl">{ar}</td>
+                          <td className="px-8 py-4 font-black text-neon-cyan text-xl tracking-tighter">{am}</td>
+                          <td className="px-8 py-4">
+                            <span className={cn(
+                              "text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-lg border",
+                              family === 'Basic' ? 'bg-white/5 text-muted-grey border-white/10' :
+                              family === 'Max' ? 'bg-neon-cyan/5 text-neon-cyan border-neon-cyan/20' :
+                              'bg-electric-purple/5 text-electric-purple border-electric-purple/20'
+                            )}>
                               {family}
                             </span>
                           </td>
@@ -368,166 +227,119 @@ export default function LearnLanguage() {
             </section>
 
             {/* Suffix Rules */}
-            <section className="bg-gradient-to-br from-deep-blue-900 to-deep-blue-950 rounded-2xl border border-white/10 p-6">
-              <h3 className="text-xl font-bold text-neon-blue mb-6">5. Mathematical Rules & Grammar</h3>
+            <section className="glass p-10 rounded-[2.5rem] border border-white/10">
+              <h3 className="text-2xl font-black text-white uppercase italic tracking-widest mb-10 text-center">5. Logic Gates & Suffix Protocol</h3>
               
-              <div className="space-y-6">
-                <div className="relative pl-6 border-l-2 border-neon-blue/30">
-                  <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-deep-blue-950 border-2 border-neon-blue"></div>
-                  <h4 className="font-bold text-white mb-2">Rule 1: Length (The Base)</h4>
-                  <p className="text-slate-300 text-sm mb-3">Calculated based on the number of letters in the original word.</p>
+              <div className="space-y-12 max-w-2xl mx-auto">
+                <div className="relative pl-12 border-l-2 border-neon-cyan/30 py-2">
+                  <div className="absolute -left-[11px] top-4 w-5 h-5 rounded-full bg-deep-space border-2 border-neon-cyan shadow-[0_0_10px_rgba(0,242,255,0.5)]"></div>
+                  <h4 className="font-black text-white text-sm uppercase tracking-widest mb-3 italic">Protocol Alpha: Scalar Length</h4>
+                  <p className="text-muted-grey text-sm font-medium mb-5">Analyzes word vector magnitude for final character mapping.</p>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/5 p-3 rounded-lg text-center">
-                      <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Even Length</div>
-                      <div className="text-xl font-mono text-neon-cyan">+lo</div>
+                    <div className="bg-black/60 p-5 rounded-2xl border border-white/5 text-center group hover:border-neon-cyan/30 transition-all">
+                      <div className="text-[10px] font-black text-muted-grey uppercase tracking-widest mb-2">Even Matrix</div>
+                      <div className="text-2xl font-black text-neon-cyan italic">+LO</div>
                     </div>
-                    <div className="bg-white/5 p-3 rounded-lg text-center">
-                      <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Odd Length</div>
-                      <div className="text-xl font-mono text-neon-cyan">+ri</div>
+                    <div className="bg-black/60 p-5 rounded-2xl border border-white/5 text-center group hover:border-neon-cyan/30 transition-all">
+                      <div className="text-[10px] font-black text-muted-grey uppercase tracking-widest mb-2">Odd Matrix</div>
+                      <div className="text-2xl font-black text-neon-cyan italic">+RI</div>
                     </div>
                   </div>
                 </div>
 
-                <div className="relative pl-6 border-l-2 border-neon-cyan/30">
-                  <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-deep-blue-950 border-2 border-neon-cyan"></div>
-                  <h4 className="font-bold text-white mb-2">Rule 2: Mix Modifier</h4>
-                  <p className="text-slate-300 text-sm mb-3">If the word contains any <span className="text-neon-cyan">Mix Family</span> character.</p>
-                  <div className="bg-white/5 p-3 rounded-lg text-center inline-block min-w-[120px]">
-                    <div className="text-xl font-mono text-neon-cyan">+ax</div>
+                <div className="relative pl-12 border-l-2 border-electric-purple/30 py-2">
+                  <div className="absolute -left-[11px] top-4 w-5 h-5 rounded-full bg-deep-space border-2 border-electric-purple shadow-[0_0_10px_rgba(112,0,255,0.5)]"></div>
+                  <h4 className="font-black text-white text-sm uppercase tracking-widest mb-3 italic">Protocol Beta: Mix Factor</h4>
+                  <p className="text-muted-grey text-sm font-medium mb-5">Triggered if signal contains complex character interference.</p>
+                  <div className="bg-black/60 p-5 rounded-2xl border border-white/5 text-center inline-block min-w-[140px]">
+                    <div className="text-2xl font-black text-electric-purple italic">+AX</div>
                   </div>
                 </div>
 
-                <div className="relative pl-6 border-l-2 border-neon-blue/30">
-                  <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-deep-blue-950 border-2 border-neon-blue"></div>
-                  <h4 className="font-bold text-white mb-2">Rule 3: Max Modifier</h4>
-                  <p className="text-slate-300 text-sm mb-3">If the word contains any <span className="text-neon-blue">Max Family</span> character (includes Mix).</p>
-                  <div className="bg-white/5 p-3 rounded-lg text-center inline-block min-w-[120px]">
-                    <div className="text-xl font-mono text-neon-cyan">+um</div>
-                  </div>
-                </div>
-
-                <div className="relative pl-6 border-l-2 border-purple-500/30">
-                  <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-deep-blue-950 border-2 border-purple-500"></div>
-                  <h4 className="font-bold text-white mb-2">Rule 4: Vowels (Prefix)</h4>
-                  <p className="text-slate-300 text-sm mb-3">If the word contains any vowel (أ، ا، ة، ع، غ), add <span className="text-purple-400 font-mono">mu</span> at the start.</p>
-                  <div className="bg-white/5 p-3 rounded-lg text-center inline-block min-w-[120px]">
-                    <div className="text-xl font-mono text-purple-400">mu+</div>
-                  </div>
-                </div>
-
-                <div className="relative pl-6 border-l-2 border-yellow-500/30">
-                  <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-deep-blue-950 border-2 border-yellow-500"></div>
-                  <h4 className="font-bold text-white mb-2">Grammar: Always Nominative</h4>
-                  <p className="text-slate-300 text-sm mb-3">
-                    Ammar Language strictly follows the Nominative case (Al-Raf').
-                    <br/>
-                    <span className="text-yellow-400">"طالبين"</span> (Accusative) becomes <span className="text-neon-cyan">"طالبون"</span> (Nominative).
-                    <br/>
-                    <span className="text-yellow-400">"لاعبين"</span> (Dual Accusative) becomes <span className="text-neon-cyan">"لاعبان"</span> (Dual Nominative).
-                  </p>
-                </div>
-
-                <div className="relative pl-6 border-l-2 border-red-500/30">
-                  <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-deep-blue-950 border-2 border-red-500"></div>
-                  <h4 className="font-bold text-white mb-2">Rule 6: No Diacritics (Tashkeel)</h4>
-                  <p className="text-slate-300 text-sm mb-3">
-                    <span className="text-red-400 font-bold block mb-1">Error: The Ammar language does not accept diacritics or Tanween.</span>
-                    <span className="text-slate-400 italic">"اللغة العمارية لا تقبل بالتشكيل ولا بالتنوين"</span>
-                  </p>
-                  <div className="bg-red-500/10 p-3 rounded-lg text-center border border-red-500/20">
-                     <div className="text-sm text-red-300">
-                       <span className="line-through opacity-50">مُحَمَّدٌ</span>
-                       <span className="mx-2">→</span>
-                       <span className="text-white font-bold">محمد</span>
-                     </div>
+                <div className="relative pl-12 border-l-2 border-neon-cyan/30 py-2">
+                  <div className="absolute -left-[11px] top-4 w-5 h-5 rounded-full bg-deep-space border-2 border-neon-cyan shadow-[0_0_10px_rgba(0,242,255,0.5)]"></div>
+                  <h4 className="font-black text-white text-sm uppercase tracking-widest mb-3 italic">Protocol Gamma: Max Load</h4>
+                  <p className="text-muted-grey text-sm font-medium mb-5">Activated when word complexity exceeds threshold.</p>
+                  <div className="bg-black/60 p-5 rounded-2xl border border-white/5 text-center inline-block min-w-[140px]">
+                    <div className="text-2xl font-black text-neon-cyan italic">+UM</div>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-8 bg-black/20 p-4 rounded-xl border border-white/5">
-                <h5 className="text-sm font-bold text-slate-300 mb-2">Example: "صقر" (Falcon)</h5>
-                <div className="flex flex-wrap items-center gap-2 text-sm font-mono">
-                  <span className="text-slate-500">s̶̊f̱r</span>
-                  <span className="text-slate-600">→</span>
-                  <span className="text-neon-cyan">ri</span>
-                  <span className="text-slate-500">(Odd 3)</span>
-                  <span className="text-slate-600">+</span>
-                  <span className="text-neon-cyan">ax</span>
-                  <span className="text-slate-500">(Has Mix 'ص')</span>
-                  <span className="text-slate-600">+</span>
-                  <span className="text-neon-cyan">um</span>
-                  <span className="text-slate-500">(Has Max)</span>
-                  <span className="text-slate-600">=</span>
-                  <span className="text-white font-bold bg-neon-blue/20 px-2 py-1 rounded">s̶̊f̱rriaxum</span>
-                </div>
-              </div>
-              
-              <div className="mt-4 bg-black/20 p-4 rounded-xl border border-white/5">
-                <h5 className="text-sm font-bold text-slate-300 mb-2">Example: "عمار" (Ammar)</h5>
-                <div className="flex flex-wrap items-center gap-2 text-sm font-mono">
-                  <span className="text-purple-400">mu</span>
-                  <span className="text-slate-500">(Has Vowel 'ع')</span>
-                  <span className="text-slate-600">+</span>
-                  <span className="text-slate-500">aᵃ̊m...</span>
-                  <span className="text-slate-600">=</span>
-                  <span className="text-white font-bold bg-purple-500/20 px-2 py-1 rounded">muaᵃ̊mmarloaxum</span>
-                </div>
+              {/* Examples */}
+              <div className="mt-16 space-y-6">
+                 <div className="glass p-6 rounded-2xl bg-black/40 border border-white/5">
+                    <h5 className="text-[10px] font-black text-muted-grey uppercase tracking-[0.2em] mb-4">Sample Trace: [صقر]</h5>
+                    <div className="flex flex-wrap items-center gap-3 font-black text-sm tracking-tight">
+                       <span className="text-muted-grey italic">s̶̊f̱r</span>
+                       <span className="w-4 h-px bg-white/10" />
+                       <span className="text-neon-cyan">+RI</span>
+                       <span className="text-[10px] text-muted-grey/50">ODD 3</span>
+                       <span className="text-white/10">+</span>
+                       <span className="text-electric-purple">+AX</span>
+                       <span className="text-[10px] text-muted-grey/50">MIX</span>
+                       <span className="text-white/10">+</span>
+                       <span className="text-neon-cyan">+UM</span>
+                       <span className="text-white/10">=</span>
+                       <span className="bg-neon-cyan/10 text-neon-cyan px-4 py-2 rounded-xl border border-neon-cyan/20">s̶̊f̱rriaxum</span>
+                    </div>
+                 </div>
+
+                 <div className="glass p-6 rounded-2xl bg-black/40 border border-white/5">
+                    <h5 className="text-[10px] font-black text-muted-grey uppercase tracking-[0.2em] mb-4">Sample Trace: [عمار]</h5>
+                    <div className="flex flex-wrap items-center gap-3 font-black text-sm tracking-tight">
+                       <span className="text-electric-purple">MU-</span>
+                       <span className="text-muted-grey italic">aᵃm...</span>
+                       <span className="w-4 h-px bg-white/10" />
+                       <span className="text-neon-cyan">+LO</span>
+                       <span className="text-white/10">+</span>
+                       <span className="text-electric-purple">+AX</span>
+                       <span className="text-white/10">+</span>
+                       <span className="text-neon-cyan">+UM</span>
+                       <span className="text-white/10">=</span>
+                       <span className="bg-electric-purple/10 text-electric-purple px-4 py-2 rounded-xl border border-electric-purple/20">muaᵃmmarloaxum</span>
+                    </div>
+                 </div>
               </div>
             </section>
-          </motion.div>
-        )}
-
-        {activeTab === 'flashcards' && (
-          <motion.div
-            key="flashcards"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-          >
-            <Flashcards cards={flashcards} />
-          </motion.div>
-        )}
-
-        {activeTab === 'quiz' && (
-          <motion.div
-            key="quiz"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-          >
-            <Quiz questions={quizQuestions} />
           </motion.div>
         )}
 
         {activeTab === 'keyboard' && (
           <motion.div
             key="keyboard"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
             className="space-y-6"
           >
-            <section className="bg-deep-blue-900/50 rounded-2xl border border-white/10 p-6">
-              <h3 className="text-xl font-bold text-white mb-4">Get The Keyboard</h3>
-              <p className="text-slate-300 mb-6">
-                Use the custom Ammar keyboard layout with the <span className="text-neon-cyan font-bold">Multiling O Keyboard</span> app on Android.
+            <section className="glass p-10 rounded-[2.5rem] border border-white/10">
+              <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase mb-6 flex items-center gap-3">
+                <div className="w-2 h-8 bg-electric-purple rounded-full" />
+                Input Matrix
+              </h3>
+              <p className="text-muted-grey font-medium mb-10 leading-relaxed">
+                Inject the custom Ammar Neural Keyboard into your Android hardware via the <span className="text-neon-cyan font-black italic">Multiling O Overlay</span>.
               </p>
               
-              <div className="bg-black/30 rounded-xl border border-white/5 p-4 mb-6 font-mono text-xs sm:text-sm text-slate-400 overflow-x-auto whitespace-pre">
+              <div className="bg-black/60 rounded-3xl border border-white/5 p-8 mb-10 font-mono text-xs text-neon-cyan/70 overflow-x-auto whitespace-pre leading-loose neo-blur">
                 {KEYBOARD_LAYOUT}
               </div>
 
-              <button
-                onClick={handleCopyKeyboard}
-                className="flex items-center gap-2 px-6 py-3 bg-neon-blue text-white rounded-xl font-bold hover:bg-neon-blue/90 transition-all shadow-lg shadow-neon-blue/20 w-full sm:w-auto justify-center"
-              >
-                {copiedKeyboard ? <Check size={20} /> : <Copy size={20} />}
-                {copiedKeyboard ? "Copied Layout Code!" : "Copy Layout Code"}
-              </button>
-              
-              <p className="text-sm text-slate-400 mt-4">
-                <span className="text-neon-cyan font-bold">Instructions:</span> Copy this code and paste it into the DIY settings inside the Multiling O Keyboard app to get the original Ammar layout.
-              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={handleCopyKeyboard}
+                  className="flex-1 flex items-center justify-center gap-3 px-8 py-5 bg-neon-cyan text-deep-space rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] transition-all shadow-2xl shadow-neon-cyan/20 active:scale-95"
+                >
+                  {copiedKeyboard ? <Check size={20} /> : <Copy size={20} />}
+                  {copiedKeyboard ? "MATRIX SYNCED" : "INITIALIZE SYNC"}
+                </button>
+                <div className="flex-1 flex items-center p-6 bg-black/30 rounded-2xl border border-white/5">
+                   <p className="text-[10px] font-black text-muted-grey uppercase leading-relaxed tracking-wider">
+                     <span className="text-neon-cyan font-black mr-2">PROTOCOL:</span> COPY ENCRYPTED SOURCE AND PASTE INTO DIY TERMINAL WITHIN MULTILING O SETTINGS.
+                   </p>
+                </div>
+              </div>
             </section>
           </motion.div>
         )}
@@ -535,52 +347,67 @@ export default function LearnLanguage() {
         {activeTab === 'docs' && (
           <motion.div
             key="docs"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
             className="space-y-6"
           >
-            <section className="bg-deep-blue-900/50 rounded-2xl border border-white/10 p-6">
-              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Code className="text-neon-cyan" />
-                Translation API
-              </h3>
-              <p className="text-slate-300 mb-6">
-                The Ammar Translator provides a public API that you can use to integrate translations into your own applications.
-              </p>
+            <section className="glass p-10 rounded-[2.5rem] border border-white/10">
+              <div className="flex items-center justify-between mb-10">
+                <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-3">
+                   <div className="w-8 h-8 rounded-lg bg-neon-cyan/20 flex items-center justify-center">
+                     <Code size={20} className="text-neon-cyan" />
+                   </div>
+                   Translation API v2
+                </h3>
+                <div className="px-3 py-1 rounded-full bg-neon-cyan/10 border border-neon-cyan/20 text-[10px] font-black text-neon-cyan tracking-widest uppercase">
+                  ACTIVE
+                </div>
+              </div>
 
-              <div className="space-y-6">
-                <div className="bg-black/30 rounded-xl border border-white/5 p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="px-2 py-1 rounded bg-green-500/20 text-green-400 text-xs font-bold font-mono">GET</span>
-                    <code className="text-sm text-white font-mono">/api/translate</code>
+              <div className="space-y-10">
+                <div className="bg-black/40 rounded-3xl border border-white/5 p-8">
+                  <div className="flex items-center gap-4 mb-6">
+                    <span className="px-4 py-1.5 rounded-xl bg-neon-cyan text-deep-space text-[10px] font-black uppercase tracking-[0.2em]">GET</span>
+                    <code className="text-sm text-neon-cyan font-mono font-bold">/api/translate</code>
                   </div>
-                  <p className="text-sm text-slate-400 mb-4">Translate text between English, Arabic, and Ammar.</p>
+                  <p className="text-sm text-muted-grey font-medium mb-8 leading-relaxed">Multi-point neural bridge connecting English, Arabic, Ammar, French, Turkish, German, and Spanish.</p>
                   
-                  <h4 className="text-sm font-bold text-slate-300 mb-2">Query Parameters</h4>
-                  <ul className="space-y-2 text-sm text-slate-400 font-mono">
-                    <li><span className="text-neon-blue">text</span> (required): The text to translate.</li>
-                    <li><span className="text-neon-blue">from</span> (required): Source language code (<span className="text-white">en</span>, <span className="text-white">ar</span>, <span className="text-white">am</span>).</li>
-                    <li><span className="text-neon-blue">to</span> (required): Target language code (<span className="text-white">en</span>, <span className="text-white">ar</span>, <span className="text-white">am</span>).</li>
-                  </ul>
-                </div>
-
-                <div className="bg-black/30 rounded-xl border border-white/5 p-4">
-                  <h4 className="text-sm font-bold text-slate-300 mb-2">Example Request</h4>
-                  <div className="bg-deep-blue-950 p-3 rounded-lg font-mono text-xs text-slate-300 overflow-x-auto">
-                    curl "https://{window.location.host}/api/translate?text=Hello&from=en&to=am"
+                  <h4 className="text-[10px] font-black text-white uppercase tracking-widest mb-4">Query Vectors</h4>
+                  <div className="grid gap-3">
+                    <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5 group hover:border-neon-cyan/30 transition-all">
+                       <span className="text-xs font-black text-neon-cyan uppercase tracking-tighter">TEXT</span>
+                       <span className="text-[10px] font-black text-muted-grey italic uppercase tracking-widest">REQUIRED | DATA STRING</span>
+                    </div>
+                    <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5 group hover:border-neon-cyan/30 transition-all">
+                       <span className="text-xs font-black text-neon-cyan uppercase tracking-tighter">FROM</span>
+                       <span className="text-[10px] font-black text-muted-grey italic uppercase tracking-widest">REQUIRED | [EN, AR, AM, FR, TR, DE, ES]</span>
+                    </div>
+                    <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5 group hover:border-neon-cyan/30 transition-all">
+                       <span className="text-xs font-black text-neon-cyan uppercase tracking-tighter">TO</span>
+                       <span className="text-[10px] font-black text-muted-grey italic uppercase tracking-widest">REQUIRED | [EN, AR, AM, FR, TR, DE, ES]</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="bg-black/30 rounded-xl border border-white/5 p-4">
-                  <h4 className="text-sm font-bold text-slate-300 mb-2">Example Response</h4>
-                  <div className="bg-deep-blue-950 p-3 rounded-lg font-mono text-xs text-green-400 overflow-x-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-black/40 rounded-3xl border border-white/5 p-8">
+                    <h4 className="text-[10px] font-black text-white uppercase tracking-widest mb-6">Execution Signal</h4>
+                    <div className="bg-deep-space p-6 rounded-2xl font-mono text-xs text-muted-grey border border-white/5 overflow-x-auto whitespace-pre italic">
+                      {`curl "https://ammartranslator.netlify.app/api/translate?text=Hello&from=en&to=am"`}
+                    </div>
+                  </div>
+
+                  <div className="bg-black/40 rounded-3xl border border-white/5 p-8">
+                    <h4 className="text-[10px] font-black text-white uppercase tracking-widest mb-6">Neural Feedback</h4>
+                    <div className="bg-deep-space p-6 rounded-2xl font-mono text-xs text-neon-cyan/80 border border-white/5 overflow-x-auto whitespace-pre italic">
 {`{
   "text": "Hello",
-  "translated": "mtaᵃ̊hlwa",
+  "translated": "muMrH̅barium",
   "from": "en",
   "to": "am"
 }`}
+                    </div>
                   </div>
                 </div>
               </div>

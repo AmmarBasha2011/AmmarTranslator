@@ -8,7 +8,6 @@ const MOD_TIKRAR = '\u1d43'; // Small 'a' above
 
 // Character Sets
 export const MAX_CHARS = new Set([
-  'أ', 'إ', 'آ', 'ء', 'ؤ', 'ئ', // a + yoghashak
   'ث', // s + yoghashak
   'ح', // H + yoghashak_h
   'خ', // H + multi

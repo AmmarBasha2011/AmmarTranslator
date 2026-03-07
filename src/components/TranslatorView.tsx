@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Copy, ArrowRightLeft, Sparkles, X, AlertTriangle, CheckCircle2, Volume2, Mic, MicOff, Upload, Download, FileText, Music } from 'lucide-react';
+import { Copy, ArrowRightLeft, Sparkles, X, AlertTriangle, CheckCircle2, Volume2, Mic, MicOff, Upload, Download, FileText } from 'lucide-react';
 import { validateInput, ValidationError } from '../services/validator';
 import { cn } from '../lib/utils';
 import { useTextToSpeech } from '../hooks/useTextToSpeech';
@@ -12,18 +12,19 @@ import * as pdfjsLib from 'pdfjs-dist';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 const LANGUAGES: { code: SupportedLanguage; name: string }[] = [
-  { code: 'ar', name: 'ARABIC' },
-  { code: 'am', name: 'AMMAR' },
-  { code: 'en', name: 'ENGLISH' },
-  { code: 'fr', name: 'FRENCH' },
-  { code: 'tr', name: 'TURKISH' },
-  { code: 'de', name: 'GERMAN' },
-  { code: 'es', name: 'SPANISH' },
+  { code: 'ar', name: 'Arabic' },
+  { code: 'am', name: 'Ammar' },
+  { code: 'en', name: 'English' },
+  { code: 'fr', name: 'French' },
+  { code: 'tr', name: 'Turkish' },
+  { code: 'de', name: 'German' },
+  { code: 'es', name: 'Spanish' },
 ];
 
 export default function TranslatorView() {
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
+  const [pronunciation, setPronunciation] = useState('');
   const [fromLang, setFromLang] = useState<SupportedLanguage>('ar');
   const [toLang, setToLang] = useState<SupportedLanguage>('am');
   const [copied, setCopied] = useState(false);
@@ -47,6 +48,7 @@ export default function TranslatorView() {
     const timer = setTimeout(async () => {
       if (!inputText.trim()) {
         setOutputText('');
+        setPronunciation('');
         setValidationErrors([]);
         return;
       }
@@ -57,7 +59,8 @@ export default function TranslatorView() {
       setIsTranslating(true);
       try {
         const result = await translate(inputText, fromLang, toLang);
-        setOutputText(result);
+        setOutputText(result.text);
+        setPronunciation(result.pronunciation || '');
       } catch (e) {
         console.error("Translation failed", e);
       } finally {
@@ -101,25 +104,6 @@ export default function TranslatorView() {
     } else {
       speak(outputText, toLang === 'am' ? 'am' : 'ar');
     }
-  };
-
-  const downloadAudio = async (text: string, lang: string) => {
-    let textToFetch = text;
-    let voiceLang = lang === 'am' ? 'ar' : lang;
-
-    if (lang === 'am') {
-      textToFetch = convertToPhonetic(text);
-    }
-
-    const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(textToFetch)}&tl=${voiceLang}&client=tw-ob`;
-
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `audio_${lang}.mp3`;
-    link.target = "_blank"; // Fallback for browsers that block direct download from Google
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const handleMicClick = () => {
@@ -178,131 +162,90 @@ export default function TranslatorView() {
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-24 max-w-2xl mx-auto">
+    <div className="flex flex-col gap-4">
 
-      {/* Language Bar */}
-      <div className="flex items-center justify-between gap-4 glass p-3 rounded-2xl border border-white/5 neo-blur group">
-        <div className="relative flex-1">
-          <select
-            value={fromLang}
-            onChange={(e) => setFromLang(e.target.value as any)}
-            className="w-full bg-black/30 text-xs font-black tracking-widest text-neon-cyan focus:outline-none cursor-pointer p-3 rounded-xl appearance-none border border-white/5 hover:border-neon-cyan/30 transition-all uppercase"
-          >
-            {LANGUAGES.map(lang => (
-              <option key={lang.code} value={lang.code}>{lang.name}</option>
-            ))}
-          </select>
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
-            <div className="w-1.5 h-1.5 border-r border-b border-neon-cyan rotate-45" />
-          </div>
-        </div>
+      {/* Language Selection Grid */}
+      <div className="grid grid-cols-[1fr,auto,1fr] items-center gap-2 bg-white p-2 rounded-2xl border border-border shadow-sm">
+        <select
+          value={fromLang}
+          onChange={(e) => setFromLang(e.target.value as any)}
+          className="w-full bg-slate-50 text-sm font-bold text-primary p-3 rounded-xl appearance-none focus:outline-none transition-all"
+        >
+          {LANGUAGES.map(lang => (
+            <option key={lang.code} value={lang.code}>{lang.name}</option>
+          ))}
+        </select>
 
         <button
           onClick={swapLanguages}
-          className="p-3 rounded-full bg-neon-cyan/10 hover:bg-neon-cyan text-neon-cyan hover:text-deep-space transition-all active:scale-90 border border-neon-cyan/20 group-hover:neo-blur"
+          className="p-2.5 rounded-xl bg-primary/5 hover:bg-primary/10 text-primary transition-all active:scale-90"
         >
           <ArrowRightLeft size={18} />
         </button>
 
-        <div className="relative flex-1">
-          <select
-            value={toLang}
-            onChange={(e) => setToLang(e.target.value as any)}
-            className="w-full bg-black/30 text-xs font-black tracking-widest text-electric-purple focus:outline-none cursor-pointer p-3 rounded-xl appearance-none border border-white/5 hover:border-electric-purple/30 transition-all uppercase text-right"
-          >
-            {LANGUAGES.map(lang => (
-              <option key={lang.code} value={lang.code}>{lang.name}</option>
-            ))}
-          </select>
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
-            <div className="w-1.5 h-1.5 border-l border-b border-electric-purple rotate-45" />
-          </div>
-        </div>
+        <select
+          value={toLang}
+          onChange={(e) => setToLang(e.target.value as any)}
+          className="w-full bg-slate-50 text-sm font-bold text-secondary p-3 rounded-xl appearance-none focus:outline-none transition-all text-right"
+        >
+          {LANGUAGES.map(lang => (
+            <option key={lang.code} value={lang.code}>{lang.name}</option>
+          ))}
+        </select>
       </div>
 
-      {/* Input Box */}
-      <div className="relative">
-        <div className={cn(
-          "absolute -inset-1 rounded-3xl blur-md opacity-20 transition duration-500",
-          validationErrors.length > 0 ? "bg-red-500" : "bg-neon-cyan"
-        )}></div>
+      {/* Input Card */}
+      <div className="relative bg-white rounded-3xl border border-border shadow-sm overflow-hidden flex flex-col group transition-all focus-within:ring-2 focus-within:ring-primary/20">
+        <textarea
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          placeholder="Tap to enter text..."
+          className="w-full h-40 sm:h-56 p-5 text-lg resize-none focus:outline-none placeholder:text-text-muted font-medium leading-relaxed bg-transparent"
+          dir="auto"
+        />
 
-        <div className={cn(
-          "relative glass rounded-3xl overflow-hidden transition-all duration-300",
-          validationErrors.length > 0 ? "border-red-500/30" : "border-white/10"
-        )}>
-          <textarea
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder="ENTER SOURCE TEXT..."
-            className="w-full h-48 sm:h-56 bg-transparent p-6 text-xl sm:text-2xl resize-none focus:outline-none placeholder:text-muted-grey font-black tracking-tight leading-snug"
-            dir="auto"
-          />
-          
-          <div className="absolute top-6 right-6 flex items-center gap-3">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              className="hidden"
-              accept=".pdf,.txt,.md"
-            />
+        <div className="flex items-center justify-between p-3 bg-slate-50/50 border-t border-border">
+          <div className="flex gap-2">
+            <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".pdf,.txt,.md" />
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="p-3 rounded-xl bg-white/5 text-muted-grey hover:text-neon-cyan hover:bg-neon-cyan/10 transition-all active:scale-95 border border-white/10"
-              title="Upload PDF, TXT, or MD"
+              className="p-2.5 rounded-xl text-text-muted hover:text-primary hover:bg-white transition-all border border-transparent hover:border-border"
             >
               <Upload size={18} className={isUploading ? "animate-bounce" : ""} />
             </button>
-
-            {inputText && (
-              <button
-                onClick={handleInputTTS}
-                className="p-3 rounded-xl bg-white/5 text-muted-grey hover:text-neon-cyan hover:bg-neon-cyan/10 transition-all active:scale-95 border border-white/10"
-              >
-                <Volume2 size={18} className={isSpeaking ? "text-neon-cyan animate-pulse" : ""} />
-              </button>
-            )}
-
-            {isSpeechSupported && (fromLang === 'ar') && (
+            {isSpeechSupported && (fromLang === 'ar' || fromLang === 'en') && (
               <button
                 onClick={handleMicClick}
                 className={cn(
-                  "p-3 rounded-xl transition-all active:scale-95 border",
+                  "p-2.5 rounded-xl transition-all border",
                   isListening 
-                    ? "bg-red-500/20 text-red-400 border-red-500/30 animate-pulse"
-                    : "bg-white/5 text-muted-grey hover:text-bright-white hover:bg-white/10 border-white/10"
+                    ? "bg-red-50 text-red-500 border-red-100 animate-pulse"
+                    : "text-text-muted hover:text-primary hover:bg-white border-transparent hover:border-border"
                 )}
               >
                 {isListening ? <MicOff size={18} /> : <Mic size={18} />}
               </button>
             )}
-
-            {inputText && (
-              <button 
-                onClick={() => { setInputText(''); setOutputText(''); setValidationErrors([]); }}
-                className="p-3 rounded-xl bg-white/5 text-muted-grey hover:text-white hover:bg-red-500/20 transition-all border border-white/10"
-              >
-                <X size={18} />
-              </button>
-            )}
           </div>
 
-          <div className="absolute bottom-6 left-6">
-             <AnimatePresence>
-               {isTranslating && (
-                  <motion.div
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="flex items-center gap-2 text-[10px] font-black tracking-widest text-neon-cyan"
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-ping" />
-                    NEURAL PROCESSING...
-                  </motion.div>
-               )}
-             </AnimatePresence>
+          <div className="flex gap-2">
+            {inputText && (
+              <>
+                <button
+                  onClick={handleInputTTS}
+                  className="p-2.5 rounded-xl text-text-muted hover:text-primary hover:bg-white transition-all border border-transparent hover:border-border"
+                >
+                  <Volume2 size={18} className={isSpeaking ? "text-primary animate-pulse" : ""} />
+                </button>
+                <button
+                  onClick={() => { setInputText(''); setOutputText(''); setPronunciation(''); setValidationErrors([]); }}
+                  className="p-2.5 rounded-xl text-text-muted hover:text-red-500 hover:bg-red-50 transition-all border border-transparent hover:border-red-100"
+                >
+                  <X size={18} />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -311,28 +254,27 @@ export default function TranslatorView() {
       <AnimatePresence>
         {validationErrors.length > 0 && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="glass border-red-500/30 rounded-2xl p-4 bg-red-500/5"
+            exit={{ opacity: 0, scale: 0.98 }}
+            className="bg-amber-50 border border-amber-200 rounded-2xl p-3"
           >
-            <div className="flex items-center gap-2 text-red-400 font-black text-xs uppercase tracking-widest mb-3">
+            <div className="flex items-center gap-2 text-amber-700 font-bold text-[10px] uppercase tracking-wider mb-2">
               <AlertTriangle size={14} />
-              <span>SYNTAX ANOMALIES DETECTED</span>
+              <span>Input Warnings</span>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {validationErrors.map((error, idx) => (
-                <div key={idx} className="flex items-start justify-between gap-4 bg-black/20 p-3 rounded-xl border border-red-500/10">
-                  <p className="text-sm text-red-300/80 leading-tight">
-                    <span className="font-black text-red-400 uppercase tracking-tighter italic">[{error.word}]</span> {error.message}
+                <div key={idx} className="flex items-center justify-between gap-3 bg-white/50 p-2 rounded-lg border border-amber-100">
+                  <p className="text-xs text-amber-800">
+                    <span className="font-bold">[{error.word}]</span> {error.message}
                   </p>
                   {error.suggestion && (
                     <button
                       onClick={() => applySuggestion(error)}
-                      className="whitespace-nowrap flex items-center gap-1.5 text-[10px] font-black text-neon-cyan hover:text-bright-white transition-colors bg-neon-cyan/10 px-2 py-1 rounded-lg"
+                      className="text-[10px] font-bold text-primary bg-white px-2 py-1 rounded border border-primary/20 hover:bg-primary hover:text-white transition-colors"
                     >
-                      <CheckCircle2 size={12} />
-                      REPAIR
+                      FIX
                     </button>
                   )}
                 </div>
@@ -342,75 +284,87 @@ export default function TranslatorView() {
         )}
       </AnimatePresence>
 
-      {/* Output Box */}
-      <div className="relative">
-        <div className="absolute -inset-1 bg-gradient-to-r from-neon-cyan/20 to-electric-purple/20 rounded-3xl blur-md opacity-30"></div>
-        <div className="relative glass rounded-3xl border border-white/10 overflow-hidden min-h-[160px] flex flex-col group/output transition-all duration-300 hover:border-neon-cyan/30 shadow-2xl">
-          <div className="flex-1 p-6">
-            {outputText ? (
+      {/* Output Card */}
+      <div className="relative bg-white rounded-3xl border border-border shadow-md overflow-hidden flex flex-col min-h-[140px]">
+        <div className="flex-1 p-5">
+          {isTranslating ? (
+            <div className="flex flex-col items-center justify-center h-full gap-3 py-6">
+              <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+              <span className="text-[10px] font-bold text-primary tracking-widest uppercase">Processing...</span>
+            </div>
+          ) : outputText ? (
+            <div className="space-y-4">
               <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-xl sm:text-2xl font-black tracking-tight leading-snug text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan to-electric-purple"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="text-xl font-bold leading-relaxed text-slate-800"
                 dir="auto"
               >
                 {outputText}
               </motion.p>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-muted-grey/30 gap-4 mt-4">
-                <Sparkles size={32} />
-                <span className="text-sm font-black tracking-widest uppercase">Awaiting Sequence Input</span>
-              </div>
-            )}
-          </div>
-          
-          <div className="bg-black/40 p-4 px-6 flex justify-between items-center border-t border-white/5">
-            <div className="flex gap-2">
-              {outputText && (
-                <>
-                  <button
-                    onClick={handleOutputTTS}
-                    className="p-3 rounded-xl bg-white/5 hover:bg-neon-cyan/10 text-muted-grey hover:text-neon-cyan transition-all border border-white/5"
-                    title="Listen"
-                  >
-                     <Volume2 size={18} className={isSpeaking ? "text-neon-cyan animate-pulse" : ""} />
-                  </button>
-                  <button
-                    onClick={() => downloadAudio(outputText, toLang)}
-                    className="p-3 rounded-xl bg-white/5 hover:bg-neon-cyan/10 text-muted-grey hover:text-neon-cyan transition-all border border-white/5"
-                    title="Download Audio"
-                  >
-                     <Music size={18} />
-                  </button>
-                  <button
-                    onClick={downloadTranslation}
-                    className="p-3 rounded-xl bg-white/5 hover:bg-neon-cyan/10 text-muted-grey hover:text-neon-cyan transition-all border border-white/5"
-                    title="Download Translation"
-                  >
-                     <Download size={18} />
-                  </button>
-                </>
+
+              {pronunciation && (
+                <motion.div
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="pt-3 border-t border-slate-50"
+                >
+                  <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest block mb-1">Pronunciation</span>
+                  <p className="text-lg font-bold text-primary/70" dir="rtl">
+                    {pronunciation}
+                  </p>
+                </motion.div>
               )}
             </div>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-3 py-8">
+              <Sparkles size={32} />
+              <span className="text-xs font-bold tracking-widest uppercase">Translation will appear here</span>
+            </div>
+          )}
+        </div>
 
-            <div className="flex gap-2">
-               <button
-                onClick={handleCopy}
-                disabled={!outputText}
-                className="flex items-center gap-2.5 px-6 py-3 rounded-xl bg-neon-cyan/10 hover:bg-neon-cyan disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs font-black tracking-widest text-neon-cyan hover:text-deep-space border border-neon-cyan/20 uppercase"
+        {outputText && (
+          <div className="bg-slate-50/50 p-3 flex justify-between items-center border-t border-border">
+            <div className="flex gap-1.5">
+              <button
+                onClick={handleOutputTTS}
+                className="p-2.5 rounded-xl text-text-muted hover:text-primary hover:bg-white transition-all border border-transparent hover:border-border"
+                title="Listen"
               >
-                {copied ? (
-                  <span className="text-bright-white">INITIALIZED</span>
-                ) : (
-                  <>
-                    <Copy size={14} />
-                    <span>TRANSMIT</span>
-                  </>
-                )}
+                 <Volume2 size={18} className={isSpeaking ? "text-primary animate-pulse" : ""} />
+              </button>
+              <button
+                onClick={downloadTranslation}
+                className="p-2.5 rounded-xl text-text-muted hover:text-primary hover:bg-white transition-all border border-transparent hover:border-border"
+                title="Save Text"
+              >
+                 <Download size={18} />
               </button>
             </div>
+
+            <button
+              onClick={handleCopy}
+              className={cn(
+                "flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all text-xs font-bold uppercase tracking-wide border",
+                copied
+                  ? "bg-green-50 text-green-600 border-green-100"
+                  : "bg-primary text-white border-primary shadow-lg shadow-primary/20"
+              )}
+            >
+              {copied ? (
+                <>
+                  <CheckCircle2 size={14} />
+                  <span>Copied</span>
+                </>
+              ) : (
+                <>
+                  <Copy size={14} />
+                  <span>Copy</span>
+                </>
+              )}
+            </button>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

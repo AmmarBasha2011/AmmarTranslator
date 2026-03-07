@@ -1,6 +1,11 @@
-import { translateToArabicToAmmar, translateAmmarToArabic } from './translator';
+import { translateToArabicToAmmar, translateAmmarToArabic, getAmmarPronunciation } from './translator';
 
 export type SupportedLanguage = 'en' | 'ar' | 'am' | 'fr' | 'tr' | 'de' | 'es';
+
+export interface TranslationResult {
+  text: string;
+  pronunciation?: string;
+}
 
 const MY_MEMORY_LANGS: Record<string, string> = {
   en: 'en',
@@ -28,28 +33,34 @@ async function myMemoryTranslate(text: string, from: string, to: string): Promis
   }
 }
 
-export async function translate(text: string, from: SupportedLanguage, to: SupportedLanguage): Promise<string> {
-  if (from === to) return text;
+export async function translate(text: string, from: SupportedLanguage, to: SupportedLanguage): Promise<TranslationResult> {
+  if (from === to) return { text };
+
+  let result = '';
 
   // Case 1: Arabic <-> Ammar
   if (from === 'ar' && to === 'am') {
-    return translateToArabicToAmmar(text);
+    result = translateToArabicToAmmar(text);
+  } else if (from === 'am' && to === 'ar') {
+    result = translateAmmarToArabic(text);
   }
-  if (from === 'am' && to === 'ar') {
-    return translateAmmarToArabic(text);
-  }
-
   // Case 2: Ammar <-> Others (Go through Arabic)
-  if (from === 'am') {
+  else if (from === 'am') {
     const arabic = translateAmmarToArabic(text);
-    if (to === 'ar') return arabic;
-    return myMemoryTranslate(arabic, 'ar', MY_MEMORY_LANGS[to]);
-  }
-  if (to === 'am') {
+    if (to === 'ar') result = arabic;
+    else result = await myMemoryTranslate(arabic, 'ar', MY_MEMORY_LANGS[to]);
+  } else if (to === 'am') {
     const arabic = from === 'ar' ? text : await myMemoryTranslate(text, MY_MEMORY_LANGS[from], 'ar');
-    return translateToArabicToAmmar(arabic);
+    result = translateToArabicToAmmar(arabic);
+  }
+  // Case 3: Standard language pair (Use MyMemory)
+  else {
+    result = await myMemoryTranslate(text, MY_MEMORY_LANGS[from], MY_MEMORY_LANGS[to]);
   }
 
-  // Case 3: Standard language pair (Use MyMemory)
-  return myMemoryTranslate(text, MY_MEMORY_LANGS[from], MY_MEMORY_LANGS[to]);
+  const finalResult: TranslationResult = { text: result };
+  if (to === 'am') {
+    finalResult.pronunciation = getAmmarPronunciation(result);
+  }
+  return finalResult;
 }

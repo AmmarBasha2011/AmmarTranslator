@@ -25,11 +25,12 @@ app.get('/api/translate', async (req, res) => {
     const source = (from as string).toLowerCase() as SupportedLanguage;
     const target = (to as string).toLowerCase() as SupportedLanguage;
 
-    const translated = await translate(text, source, target);
+    const result = await translate(text, source, target);
 
     res.json({
       text,
-      translated,
+      translated: result.text,
+      pronunciation: result.pronunciation,
       from: source,
       to: target
     });

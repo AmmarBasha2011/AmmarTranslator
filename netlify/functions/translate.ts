@@ -1,5 +1,5 @@
 import { Handler } from '@netlify/functions';
-import { translateToArabicToAmmar, translateAmmarToArabic } from '../../src/services/translator';
+import { translateToArabicToAmmar, translateAmmarToArabic, getAmmarPronunciation } from '../../src/services/translator';
 
 const MY_MEMORY_LANGS: Record<string, string> = {
   en: 'en',
@@ -67,18 +67,24 @@ export const handler: Handler = async (event) => {
       };
     }
 
+    const responseBody: any = {
+      text,
+      translated,
+      from: source,
+      to: target,
+    };
+
+    if (target === 'am') {
+      responseBody.pronunciation = getAmmarPronunciation(translated);
+    }
+
     return {
       statusCode: 200,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        text,
-        translated,
-        from: source,
-        to: target,
-      }),
+      body: JSON.stringify(responseBody),
     };
   } catch (error) {
     console.error('Translation Error:', error);

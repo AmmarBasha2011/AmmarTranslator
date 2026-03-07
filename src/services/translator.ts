@@ -9,6 +9,73 @@ import {
   isArabicChar
 } from '../constants';
 
+// Pronunciation Mapping
+const AMMAR_TO_PRONUNCIATION: Record<string, string> = {
+  'a': 'ا',
+  'i': 'ي',
+  '\u030A': '', // Yoghashak is phonetically silent in this context
+  '\u0305': '', // Overline
+  '\u0331': '', // Line below
+  '\u0336': '', // Strikethrough
+  '\u1d43': '', // Tikrar
+  'b': 'ب',
+  'T': 'ت',
+  'g': 'ج',
+  'd': 'د',
+  'r': 'ر',
+  'z': 'ز',
+  's': 'س',
+  'ş': 'ش',
+  'f': 'ف',
+  'k': 'ك',
+  'L': 'ل',
+  'M': 'م',
+  'N': 'ن',
+  'H': 'ه',
+  'o': 'ة',
+  'w': 'و',
+  'u': 'و',
+  'Y': 'ى',
+};
+
+export function getAmmarPronunciation(ammarText: string): string {
+  const tokens = ammarText.split(/(\s+|[،.!?؟]+)/);
+
+  return tokens.map(token => {
+    if (!token.trim() || /^[،.!?؟]+$/.test(token)) return token;
+
+    let result = '';
+    let i = 0;
+    while (i < token.length) {
+      let char = token[i];
+      // Check for 'mu' prefix
+      if (i === 0 && token.startsWith('mu')) {
+        result += 'مُو';
+        i += 2;
+        continue;
+      }
+
+      // Check for suffixes
+      if (i >= token.length - 2) {
+        const remaining = token.slice(i);
+        if (remaining === 'lo') { result += 'لُو'; break; }
+        if (remaining === 'ri') { result += 'رِي'; break; }
+        if (remaining === 'ax') { result += 'اكس'; break; }
+        if (remaining === 'um') { result += 'وم'; break; }
+      }
+
+      // Base characters
+      if (AMMAR_TO_PRONUNCIATION[char] !== undefined) {
+        result += AMMAR_TO_PRONUNCIATION[char];
+      } else {
+        result += char;
+      }
+      i++;
+    }
+    return result;
+  }).join('');
+}
+
 // --- Arabic to Ammar ---
 
 export function translateToArabicToAmmar(text: string): string {
@@ -48,7 +115,7 @@ function translateWordToAmmar(word: string): string {
   // 1. Normalize Grammar (Always Nominative)
   const normalizedWord = normalizeArabicGrammar(cleanWord);
 
-  let ammarWord = '';
+  let ammarChars: string[] = [];
   let hasMax = false;
   let hasMix = false;
   let hasVowel = false;
@@ -64,16 +131,21 @@ function translateWordToAmmar(word: string): string {
   // Translate characters
   for (const char of normalizedWord) {
     if (ARABIC_TO_AMMAR[char]) {
-      ammarWord += ARABIC_TO_AMMAR[char];
+      ammarChars.push(ARABIC_TO_AMMAR[char]);
       originalLength++;
       
       if (MAX_CHARS.has(char)) hasMax = true;
       if (MIX_CHARS.has(char)) hasMix = true;
     } else {
       // Keep non-mapped characters
-      ammarWord += char;
+      ammarChars.push(char);
     }
   }
+
+  // --- PROTOCOL DELTA: REFLECTION ---
+  // Reflect the base sequence before appending protocols
+  ammarChars.reverse();
+  let ammarWord = ammarChars.join('');
 
   // Apply Suffix Rules
   // 1. Length Rule
@@ -175,6 +247,13 @@ function translateWordToArabic(word: string): string {
     processedWord = processedWord.slice(0, -2);
   } else if (processedWord.endsWith('ri')) {
     processedWord = processedWord.slice(0, -2);
+  }
+
+  // --- REVERSE REFLECTION ---
+  const charRegex = /[a-zA-Z\u015F][\u0300-\u036F\u1d43]*/g;
+  const matches = processedWord.match(charRegex);
+  if (matches) {
+    processedWord = matches.reverse().join('');
   }
 
   // 2. Decoding

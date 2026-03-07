@@ -18,7 +18,6 @@ export const MAX_CHARS = new Set([
   'ض', // s + double
   'ط', // T + multi
   'ظ', // T + double + multi (Mix)
-  'ع', // a + tikrar
   'غ', // a + tikrar + yoghashak (Mix)
   'ق', // f + multi
 ]);
@@ -33,7 +32,7 @@ export const MIX_CHARS = new Set([
 // Mapping: Arabic -> Ammar
 export const ARABIC_TO_AMMAR: Record<string, string> = {
   'ا': 'a',
-  'ى': 'i', // Mapped to 'i' as per user list
+  'ي': 'i',
   'أ': 'a' + MOD_YOGHASHAK,
   'إ': 'a' + MOD_YOGHASHAK,
   'آ': 'a' + MOD_YOGHASHAK,
@@ -67,7 +66,7 @@ export const ARABIC_TO_AMMAR: Record<string, string> = {
   'ه': 'H',
   'ة': 'o',
   'و': 'w',
-  'ي': 'Y',
+  'ى': 'Y',
 };
 
 // Mapping: Ammar -> Arabic (Reverse)
@@ -75,7 +74,7 @@ export const ARABIC_TO_AMMAR: Record<string, string> = {
 // We will sort keys by length descending in the translation logic.
 export const AMMAR_TO_ARABIC_MAP: Record<string, string[]> = {
   'a': ['ا'],
-  'i': ['ى'],
+  'i': ['ي'],
   ['a' + MOD_YOGHASHAK]: ['أ', 'إ', 'آ', 'ء', 'ؤ', 'ئ'],
   'b': ['ب'],
   'T': ['ت'],
@@ -105,7 +104,7 @@ export const AMMAR_TO_ARABIC_MAP: Record<string, string[]> = {
   'o': ['ة'],
   'w': ['و'],
   'u': ['و'], // Added for 'mu' prefix handling
-  'Y': ['ي'],
+  'Y': ['ى'],
   
   // Legacy/Fallback support for casing (if user types wrong case)
   't': ['ت'],

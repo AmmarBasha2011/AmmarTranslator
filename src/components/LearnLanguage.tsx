@@ -264,6 +264,34 @@ export default function LearnLanguage() {
                     <div className="text-2xl font-black text-neon-cyan italic">+UM</div>
                   </div>
                 </div>
+
+                <div className="relative pl-12 border-l-2 border-neon-cyan/30 py-2">
+                  <div className="absolute -left-[11px] top-4 w-5 h-5 rounded-full bg-deep-space border-2 border-neon-cyan shadow-[0_0_10px_rgba(0,242,255,0.5)]"></div>
+                  <h4 className="font-black text-white text-sm uppercase tracking-widest mb-3 italic">6. Grammar Protocol (Auto-Correction)</h4>
+                  <p className="text-muted-grey text-sm font-medium mb-5">System automatically converts Accusative/Genitive cases to Nominative.</p>
+                  <div className="space-y-4">
+                    <div className="bg-black/60 p-4 rounded-xl border border-white/5">
+                      <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest mb-2">
+                        <span className="text-muted-grey">Input Signal</span>
+                        <span className="text-neon-cyan">Processed Output</span>
+                      </div>
+                      <div className="flex items-center justify-between font-mono">
+                        <span className="text-white opacity-50">"Muslimeen" (مسلمين)</span>
+                        <span className="text-neon-cyan">"Muslimoon" (مسلمون)</span>
+                      </div>
+                    </div>
+                    <div className="bg-black/60 p-4 rounded-xl border border-white/5">
+                      <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest mb-2">
+                        <span className="text-muted-grey">Input Signal</span>
+                        <span className="text-neon-cyan">Processed Output</span>
+                      </div>
+                      <div className="flex items-center justify-between font-mono">
+                        <span className="text-white opacity-50">"Ketabain" (كتابين)</span>
+                        <span className="text-neon-cyan">"Ketaban" (كتابان)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Examples */}

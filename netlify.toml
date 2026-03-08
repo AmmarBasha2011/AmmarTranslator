@@ -14,7 +14,17 @@
   status = 200
 
 [[redirects]]
+  from = "/hub-get"
+  to = "/.netlify/functions/hub-get"
+  status = 200
+
+[[redirects]]
   from = "/api/hub-add"
+  to = "/.netlify/functions/hub-add"
+  status = 200
+
+[[redirects]]
+  from = "/hub-add"
   to = "/.netlify/functions/hub-add"
   status = 200
 

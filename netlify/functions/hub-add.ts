@@ -25,7 +25,17 @@ export const handler: Handler = async (event) => {
 
     const targetUrl = `http://ammrhubapi.inexteamhost.dpdns.org/index.php?action=add&text_ar=${encodeURIComponent(text_ar || 'From User')}&text_am=${encodeURIComponent(text_am)}`;
 
-    const response = await fetch(targetUrl);
+    const response = await fetch(targetUrl, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'AmmarTranslator-V2'
+      }
+    });
+
+    if (!response.ok) {
+       throw new Error(`External API responded with status: ${response.status}`);
+    }
+
     const data = await response.json();
 
     return {

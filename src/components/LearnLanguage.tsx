@@ -400,7 +400,7 @@ export default function LearnLanguage({ uiLang = 'en' }: LearnLanguageProps) {
                 <div className="bg-app-bg rounded-2xl p-4 border border-border">
                   <div className="flex items-center gap-3 mb-4">
                     <span className="px-2 py-1 rounded-lg bg-primary text-white text-[10px] font-bold">GET</span>
-                    <code className="text-xs text-primary font-bold">/api/hub-get</code>
+                    <code className="text-xs text-primary font-bold">/hub-get</code>
                   </div>
                   <p className="text-[10px] text-text-muted mb-4 uppercase font-bold tracking-tight">Retrieve all posts from the Hub.</p>
                   <div className="bg-slate-900 text-green-400 p-4 rounded-2xl font-mono text-[10px] overflow-x-auto italic">
@@ -419,7 +419,7 @@ export default function LearnLanguage({ uiLang = 'en' }: LearnLanguageProps) {
                 <div className="bg-app-bg rounded-2xl p-4 border border-border">
                   <div className="flex items-center gap-3 mb-4">
                     <span className="px-2 py-1 rounded-lg bg-indigo-500 text-white text-[10px] font-bold">POST</span>
-                    <code className="text-xs text-indigo-500 font-bold">/api/hub-add</code>
+                    <code className="text-xs text-indigo-500 font-bold">/hub-add</code>
                   </div>
                   <p className="text-[10px] text-text-muted mb-4 uppercase font-bold tracking-tight">Add a new post with syntax validation.</p>
 

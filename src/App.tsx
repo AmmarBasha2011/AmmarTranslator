@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Languages, BookOpen, LayoutGrid, Sun, Moon, Globe } from 'lucide-react';
+import { Languages, BookOpen, LayoutGrid, Globe } from 'lucide-react';
 import { cn } from './lib/utils';
 import TranslatorView from './components/TranslatorView';
 import LearnLanguage from './components/LearnLanguage';
@@ -8,34 +8,20 @@ import Hub from './components/Hub';
 import { Language, getTranslation } from './lib/i18n';
 
 type Tab = 'translator' | 'learn' | 'hub';
-type Theme = 'light' | 'dark';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('translator');
-  const [theme, setTheme] = useState<Theme>(() =>
-    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  );
   const [uiLang, setUiLang] = useState<Language>('en');
   const [prefilledAmmar, setPrefilledAmmar] = useState<string>('');
 
   const t = (key: string) => getTranslation(key, uiLang);
-
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
-
-  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
   return (
     <div className="min-h-screen bg-app-bg text-text-main flex flex-col font-sans pb-24 sm:pb-0 transition-colors duration-300" dir={uiLang === 'ar' ? 'rtl' : 'ltr'}>
       
       {/* Subtle Background Elements */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-primary/5 to-transparent dark:from-primary/10" />
+        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-primary/5 to-transparent" />
       </div>
 
       {/* Header */}
@@ -92,14 +78,6 @@ export default function App() {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={toggleTheme}
-            className="p-2.5 rounded-xl bg-app-bg border border-border text-text-muted hover:text-primary transition-all"
-            aria-label="Toggle Theme"
-          >
-            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
-
           <div className="relative group">
             <button className="flex items-center gap-1.5 p-2.5 rounded-xl bg-app-bg border border-border text-text-muted hover:text-primary transition-all">
               <Globe size={18} />

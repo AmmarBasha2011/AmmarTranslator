@@ -42,7 +42,7 @@ export default function Hub({ uiLang, onTranslate }: HubProps) {
   const fetchPosts = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/hub-get');
+      const response = await fetch('/hub-get');
       const data = await response.json();
 
       // Decode Unicode in response
@@ -72,7 +72,7 @@ export default function Hub({ uiLang, onTranslate }: HubProps) {
 
     setIsPosting(true);
     try {
-      const response = await fetch(`/api/hub-add`, {
+      const response = await fetch(`/hub-add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text_am: newPostText, text_ar: 'From User' })

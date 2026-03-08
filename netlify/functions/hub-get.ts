@@ -19,7 +19,14 @@ export const handler: Handler = async (event) => {
       throw new Error(`External API responded with status: ${response.status}`);
     }
 
-    const data = await response.json();
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('Failed to parse JSON. Response body:', text);
+      throw new Error(`Invalid JSON response from API. Start of body: ${text.substring(0, 100)}`);
+    }
 
     return {
       statusCode: 200,

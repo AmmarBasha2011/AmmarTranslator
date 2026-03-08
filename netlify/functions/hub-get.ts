@@ -12,7 +12,23 @@ export const handler: Handler = async (event) => {
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST204') {
+        return {
+          statusCode: 200,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            error: 'TABLE_NOT_FOUND',
+            message: "The 'posts' table has not been created in Supabase yet. Please run the SQL setup from the Learn > API tab.",
+            data: []
+          }),
+        };
+      }
+      throw error;
+    }
 
     return {
       statusCode: 200,

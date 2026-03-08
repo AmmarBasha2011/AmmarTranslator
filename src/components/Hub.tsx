@@ -45,6 +45,12 @@ export default function Hub({ uiLang, onTranslate }: HubProps) {
       const response = await fetch('/hub-get');
       const data = await response.json();
 
+      if (data.error === 'TABLE_NOT_FOUND') {
+        setStatus({ type: 'error', message: data.message });
+        setIsLoading(false);
+        return;
+      }
+
       if (!Array.isArray(data)) {
         throw new Error(data.details || 'Unexpected API response format');
       }

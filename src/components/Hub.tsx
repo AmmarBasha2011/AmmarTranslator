@@ -45,16 +45,29 @@ export default function Hub({ uiLang, onTranslate }: HubProps) {
       const response = await fetch('/hub-get');
       const data = await response.json();
 
+      if (data.error === 'API_BOT_PROTECTED') {
+        setStatus({
+          type: 'error',
+          message: 'The Hub database is currently protected by a security challenge. Automated access is temporarily blocked by the hosting provider.'
+        });
+        return;
+      }
+
+      if (!Array.isArray(data)) {
+        throw new Error('Unexpected API response format');
+      }
+
       // Decode Unicode in response
       const decodedData = data.map((post: any) => ({
         ...post,
-        text_ar: decodeUnicode(post.text_ar),
-        text_am: decodeUnicode(post.text_am)
+        text_ar: decodeUnicode(post.text_ar || ''),
+        text_am: decodeUnicode(post.text_am || '')
       }));
 
       setPosts(decodedData);
     } catch (error) {
       console.error('Failed to fetch posts:', error);
+      setStatus({ type: 'error', message: 'Connection to Hub failed. Please try again later.' });
     } finally {
       setIsLoading(false);
     }

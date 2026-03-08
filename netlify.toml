@@ -9,6 +9,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/hub-get"
+  to = "/.netlify/functions/hub-get"
+  status = 200
+
+[[redirects]]
+  from = "/api/hub-add"
+  to = "/.netlify/functions/hub-add"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

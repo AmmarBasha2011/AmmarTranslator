@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, Keyboard, Check, FileText, Code, Copy, Globe, Info, Zap, Layers, Cpu } from 'lucide-react';
 import { ARABIC_TO_AMMAR, MAX_CHARS, MIX_CHARS, VOWEL_CHARS } from '../constants';
 import { cn } from '../lib/utils';
+import { Language, getTranslation } from '../lib/i18n';
 
 const KEYBOARD_LAYOUT = `OK_Layout_Begin
 Name:AmmarLang
@@ -24,7 +25,12 @@ Ṯ̶Z̊S̊ŞMNO
 ʒΩ≈çþ∫ŋµ≤≥°
 OK_Layout_End`;
 
-export default function LearnLanguage() {
+interface LearnLanguageProps {
+  uiLang?: Language;
+}
+
+export default function LearnLanguage({ uiLang = 'en' }: LearnLanguageProps) {
+  const t = (key: string) => getTranslation(key, uiLang);
   const [activeTab, setActiveTab] = useState<'guide' | 'keyboard' | 'docs'>('guide');
   const [copiedKeyboard, setCopiedKeyboard] = useState(false);
 
@@ -66,36 +72,36 @@ export default function LearnLanguage() {
     <div className="w-full space-y-6 pb-20">
       
       {/* Tab Switcher */}
-      <div className="flex bg-white p-1 rounded-xl border border-border shadow-sm sticky top-20 z-20 overflow-x-auto no-scrollbar">
+      <div className="flex bg-card-bg p-1 rounded-xl border border-border shadow-sm sticky top-20 z-20 overflow-x-auto no-scrollbar" dir="ltr">
         <button
           onClick={() => setActiveTab('guide')}
           className={cn(
             "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold tracking-tight transition-all uppercase whitespace-nowrap",
-            activeTab === 'guide' ? 'bg-primary text-white shadow-md' : 'text-text-muted hover:bg-slate-50'
+            activeTab === 'guide' ? 'bg-primary text-white shadow-md' : 'text-text-muted hover:bg-app-bg'
           )}
         >
           <BookOpen size={16} />
-          Guide
+          {t('learn.guide')}
         </button>
         <button
           onClick={() => setActiveTab('keyboard')}
           className={cn(
             "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold tracking-tight transition-all uppercase whitespace-nowrap",
-            activeTab === 'keyboard' ? 'bg-secondary text-white shadow-md' : 'text-text-muted hover:bg-slate-50'
+            activeTab === 'keyboard' ? 'bg-secondary text-white shadow-md' : 'text-text-muted hover:bg-app-bg'
           )}
         >
           <Keyboard size={16} />
-          Matrix
+          {t('learn.matrix')}
         </button>
         <button
           onClick={() => setActiveTab('docs')}
           className={cn(
             "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold tracking-tight transition-all uppercase whitespace-nowrap",
-            activeTab === 'docs' ? 'bg-primary text-white shadow-md' : 'text-text-muted hover:bg-slate-50'
+            activeTab === 'docs' ? 'bg-primary text-white shadow-md' : 'text-text-muted hover:bg-app-bg'
           )}
         >
           <Code size={16} />
-          API
+          {t('learn.api')}
         </button>
       </div>
 
@@ -109,16 +115,16 @@ export default function LearnLanguage() {
             className="space-y-6"
           >
             {/* Introduction */}
-            <section className="bg-white p-6 rounded-3xl border border-border shadow-sm space-y-3">
-              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">The Ammar Protocol</h2>
+            <section className="bg-card-bg p-6 rounded-3xl border border-border shadow-sm space-y-3">
+              <h2 className="text-2xl font-bold text-text-main tracking-tight">The Ammar Protocol</h2>
               <p className="text-sm text-text-muted leading-relaxed">
                 The Ammar Language is a neural construct based on geometric modification of Latin phonemes. It utilizes specific operations to transform base logic into complex Arabic semantic structures.
               </p>
             </section>
 
             {/* Protocol Stack */}
-            <section className="bg-white rounded-3xl border border-border shadow-sm overflow-hidden">
-              <div className="p-5 border-b border-border bg-slate-50/50 flex items-center gap-3">
+            <section className="bg-card-bg rounded-3xl border border-border shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-border bg-app-bg/50 flex items-center gap-3">
                 <Cpu size={18} className="text-primary" />
                 <h3 className="font-bold text-sm uppercase tracking-wider">Neural Logic Stack</h3>
               </div>
@@ -144,7 +150,7 @@ export default function LearnLanguage() {
             </section>
 
             {/* Practical Example */}
-            <section className="bg-white p-6 rounded-3xl border border-border shadow-sm">
+            <section className="bg-card-bg p-6 rounded-3xl border border-border shadow-sm">
               <div className="flex items-center gap-3 mb-4">
                 <Zap size={18} className="text-primary" />
                 <h3 className="font-bold text-sm uppercase tracking-wider">Sample Traces</h3>
@@ -153,17 +159,17 @@ export default function LearnLanguage() {
               <div className="space-y-8">
                 {/* Example 1 */}
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between px-3 py-1 bg-slate-50 rounded-lg">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Vector A: [أبي]</span>
+                  <div className="flex items-center justify-between px-3 py-1 bg-app-bg rounded-lg">
+                    <span className="text-[10px] font-bold text-text-muted uppercase tracking-tight">Vector A: [أبي]</span>
                   </div>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
+                    <div className="flex items-center justify-between p-3 bg-app-bg/50 rounded-2xl border border-border">
                       <span className="text-xs text-text-muted">I. Input</span>
                       <span className="text-sm font-bold">أبي</span>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100">
-                      <span className="text-xs text-indigo-700">II. Reflect</span>
-                      <span className="text-sm font-bold text-indigo-900">iba</span>
+                    <div className="flex items-center justify-between p-3 bg-indigo-50/50 rounded-2xl border border-indigo-500/10">
+                      <span className="text-xs text-indigo-700 dark:text-indigo-400">II. Reflect</span>
+                      <span className="text-sm font-bold text-indigo-900 dark:text-indigo-100">iba</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-primary/5 rounded-2xl border border-primary/10">
                       <span className="text-xs text-primary">III. Scalar</span>
@@ -178,17 +184,17 @@ export default function LearnLanguage() {
 
                 {/* Example 2 */}
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between px-3 py-1 bg-slate-50 rounded-lg">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Vector B: [عمار]</span>
+                  <div className="flex items-center justify-between px-3 py-1 bg-app-bg rounded-lg">
+                    <span className="text-[10px] font-bold text-text-muted uppercase tracking-tight">Vector B: [عمار]</span>
                   </div>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
+                    <div className="flex items-center justify-between p-3 bg-app-bg/50 rounded-2xl border border-border">
                       <span className="text-xs text-text-muted">I. Input</span>
                       <span className="text-sm font-bold">عمار</span>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100">
-                      <span className="text-xs text-indigo-700">II. Reflect</span>
-                      <span className="text-sm font-bold text-indigo-900">raMaᵃ</span>
+                    <div className="flex items-center justify-between p-3 bg-indigo-50/50 rounded-2xl border border-indigo-500/10">
+                      <span className="text-xs text-indigo-700 dark:text-indigo-400">II. Reflect</span>
+                      <span className="text-sm font-bold text-indigo-900 dark:text-indigo-100">raMaᵃ</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-primary/5 rounded-2xl border border-primary/10">
                       <span className="text-xs text-primary">III. Scalar+Max</span>
@@ -204,16 +210,16 @@ export default function LearnLanguage() {
             </section>
 
             {/* Modifiers */}
-            <section className="bg-white p-6 rounded-3xl border border-border shadow-sm">
+            <section className="bg-card-bg p-6 rounded-3xl border border-border shadow-sm">
               <h3 className="font-bold text-sm uppercase tracking-wider mb-6">Geometric Modifiers</h3>
               <div className="grid grid-cols-1 gap-4">
                 {operations.map((op) => (
-                  <div key={op.name} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-primary/20 transition-all">
-                    <div className="w-12 h-12 flex items-center justify-center bg-white rounded-xl text-2xl font-mono text-primary border border-border shadow-sm">
+                  <div key={op.name} className="flex items-center gap-4 p-4 bg-app-bg rounded-2xl border border-border hover:border-primary/20 transition-all">
+                    <div className="w-12 h-12 flex items-center justify-center bg-card-bg rounded-xl text-2xl font-mono text-primary border border-border shadow-sm">
                       ◌{op.symbol}
                     </div>
                     <div>
-                      <div className="font-bold text-slate-900 text-xs uppercase tracking-widest">{op.name}</div>
+                      <div className="font-bold text-text-main text-xs uppercase tracking-widest">{op.name}</div>
                       <div className="text-[10px] text-text-muted font-medium mt-0.5">{op.desc}</div>
                     </div>
                   </div>
@@ -222,19 +228,19 @@ export default function LearnLanguage() {
             </section>
 
             {/* Neural Vowels */}
-            <section className="bg-white p-6 rounded-3xl border border-border shadow-sm">
+            <section className="bg-card-bg p-6 rounded-3xl border border-border shadow-sm">
               <h3 className="font-bold text-sm uppercase tracking-wider mb-6">Neural Vowels</h3>
               <div className="grid grid-cols-4 gap-2">
                 {Array.from(VOWEL_CHARS).map((char) => (
-                  <div key={char} className="flex flex-col items-center justify-center aspect-square bg-slate-50 rounded-xl border border-slate-100 hover:border-secondary/30 transition-all">
-                    <span className="text-xl font-bold text-slate-800">{char}</span>
+                  <div key={char} className="flex flex-col items-center justify-center aspect-square bg-app-bg rounded-xl border border-border hover:border-secondary/30 transition-all">
+                    <span className="text-xl font-bold text-text-main">{char}</span>
                     <span className="text-[10px] font-bold text-secondary mt-1 opacity-50">{ARABIC_TO_AMMAR[char]}</span>
                   </div>
                 ))}
               </div>
               <div className="mt-4 p-4 bg-secondary/5 rounded-2xl border border-secondary/10 text-center">
                  <span className="text-[10px] font-bold tracking-widest text-secondary uppercase">Vowel Prefix Requirement:</span>
-                 <div className="text-2xl font-bold text-slate-900 mt-1">"MU"</div>
+                 <div className="text-2xl font-bold text-text-main mt-1">"MU"</div>
               </div>
             </section>
 
@@ -243,8 +249,8 @@ export default function LearnLanguage() {
               <h3 className="font-bold text-sm uppercase tracking-wider px-2">Char Modules</h3>
               <div className="grid grid-cols-1 gap-4">
                 {families.map((family) => (
-                  <div key={family.name} className="bg-white rounded-3xl border border-border shadow-sm overflow-hidden">
-                    <div className="p-4 border-b border-border bg-slate-50/50 flex items-center justify-between">
+                  <div key={family.name} className="bg-card-bg rounded-3xl border border-border shadow-sm overflow-hidden">
+                    <div className="p-4 border-b border-border bg-app-bg/50 flex items-center justify-between">
                       <div>
                         <h4 className={`text-xs font-bold tracking-widest uppercase ${family.color}`}>{family.name}</h4>
                         <p className="text-[9px] text-text-muted font-bold uppercase tracking-tighter mt-0.5">{family.description}</p>
@@ -253,8 +259,8 @@ export default function LearnLanguage() {
                     </div>
                     <div className="p-4 flex flex-wrap gap-2">
                       {family.chars.map((char) => (
-                        <div key={char} className="flex flex-col items-center justify-center w-12 h-12 bg-slate-50 rounded-xl border border-border hover:border-primary/30 transition-all">
-                          <span className="text-lg text-slate-800">{char}</span>
+                        <div key={char} className="flex flex-col items-center justify-center w-12 h-12 bg-app-bg rounded-xl border border-border hover:border-primary/30 transition-all">
+                          <span className="text-lg text-text-main">{char}</span>
                           <span className="text-[9px] font-bold text-text-muted uppercase mt-0.5 opacity-50">{ARABIC_TO_AMMAR[char]}</span>
                         </div>
                       ))}
@@ -265,14 +271,14 @@ export default function LearnLanguage() {
             </section>
 
             {/* Complete Matrix Table */}
-            <section className="bg-white rounded-3xl border border-border shadow-sm overflow-hidden">
-              <div className="p-5 border-b border-border flex items-center justify-between bg-slate-50/50">
+            <section className="bg-card-bg rounded-3xl border border-border shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-border flex items-center justify-between bg-app-bg/50">
                 <h3 className="font-bold text-sm uppercase tracking-wider">Logic Mapping Matrix</h3>
                 <Layers size={18} className="text-primary opacity-50" />
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm border-collapse">
-                  <thead className="bg-slate-100 text-text-muted font-bold uppercase tracking-widest text-[9px]">
+                  <thead className="bg-app-bg text-text-muted font-bold uppercase tracking-widest text-[9px]">
                     <tr>
                       <th className="px-5 py-3 border-b border-border">Signal</th>
                       <th className="px-5 py-3 border-b border-border">Process</th>
@@ -286,13 +292,13 @@ export default function LearnLanguage() {
                       else if (MAX_CHARS.has(ar)) family = "Max";
 
                       return (
-                        <tr key={ar} className="hover:bg-slate-50 transition-colors">
-                          <td className="px-5 py-3 font-bold text-slate-800 text-lg">{ar}</td>
+                        <tr key={ar} className="hover:bg-app-bg transition-colors">
+                          <td className="px-5 py-3 font-bold text-text-main text-lg">{ar}</td>
                           <td className="px-5 py-3 font-bold text-primary text-lg tracking-tight">{am}</td>
                           <td className="px-5 py-3">
                             <span className={cn(
                               "text-[9px] font-bold tracking-widest uppercase px-2 py-1 rounded-md border",
-                              family === 'Basic' ? 'bg-slate-50 text-slate-500 border-slate-200' :
+                              family === 'Basic' ? 'bg-app-bg text-text-muted border-border' :
                               family === 'Max' ? 'bg-primary/5 text-primary border-primary/10' :
                               'bg-secondary/5 text-secondary border-secondary/10'
                             )}>
@@ -318,13 +324,13 @@ export default function LearnLanguage() {
             exit={{ opacity: 0, scale: 0.98 }}
             className="space-y-4"
           >
-            <section className="bg-white p-6 rounded-3xl border border-border shadow-sm">
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Input Matrix</h3>
+            <section className="bg-card-bg p-6 rounded-3xl border border-border shadow-sm">
+              <h3 className="text-lg font-bold text-text-main mb-2">Input Matrix</h3>
               <p className="text-sm text-text-muted mb-6">
                 Inject the Ammar Neural Keyboard into <span className="text-primary font-bold italic">Multiling O Overlay</span>.
               </p>
               
-              <div className="bg-slate-50 rounded-2xl p-4 mb-6 font-mono text-[10px] text-primary/70 overflow-x-auto whitespace-pre leading-relaxed border border-border">
+              <div className="bg-app-bg rounded-2xl p-4 mb-6 font-mono text-[10px] text-primary/70 overflow-x-auto whitespace-pre leading-relaxed border border-border">
                 {KEYBOARD_LAYOUT}
               </div>
 
@@ -347,14 +353,14 @@ export default function LearnLanguage() {
             exit={{ opacity: 0, scale: 0.98 }}
             className="space-y-4"
           >
-            <section className="bg-white p-6 rounded-3xl border border-border shadow-sm">
+            <section className="bg-card-bg p-6 rounded-3xl border border-border shadow-sm">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-slate-900">API Documentation</h3>
+                <h3 className="text-lg font-bold text-text-main">API Documentation</h3>
                 <span className="px-2 py-0.5 rounded-full bg-green-50 text-[10px] font-bold text-green-600 border border-green-100 uppercase">Active</span>
               </div>
 
               <div className="space-y-6">
-                <div className="bg-slate-50 rounded-2xl p-4 border border-border">
+                <div className="bg-app-bg rounded-2xl p-4 border border-border">
                   <div className="flex items-center gap-3 mb-4">
                     <span className="px-2 py-1 rounded-lg bg-primary text-white text-[10px] font-bold">GET</span>
                     <code className="text-xs text-primary font-bold">/api/translate</code>
@@ -362,8 +368,8 @@ export default function LearnLanguage() {
                   
                   <div className="grid gap-2">
                     {['text', 'from', 'to'].map(param => (
-                      <div key={param} className="flex items-center justify-between p-2 bg-white rounded-lg border border-border">
-                         <span className="text-[10px] font-bold text-slate-700 uppercase">{param}</span>
+                      <div key={param} className="flex items-center justify-between p-2 bg-card-bg rounded-lg border border-border">
+                         <span className="text-[10px] font-bold text-text-main uppercase">{param}</span>
                          <span className="text-[9px] text-text-muted italic">Required</span>
                       </div>
                     ))}
@@ -386,6 +392,50 @@ export default function LearnLanguage() {
   "pronunciation": "مُويِيبري",
   "from": "ar",
   "to": "am"
+}`}
+                  </div>
+                </div>
+
+                {/* Hub GET */}
+                <div className="bg-app-bg rounded-2xl p-4 border border-border">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="px-2 py-1 rounded-lg bg-primary text-white text-[10px] font-bold">GET</span>
+                    <code className="text-xs text-primary font-bold">/api/hub-get</code>
+                  </div>
+                  <p className="text-[10px] text-text-muted mb-4 uppercase font-bold tracking-tight">Retrieve all posts from the Hub.</p>
+                  <div className="bg-slate-900 text-green-400 p-4 rounded-2xl font-mono text-[10px] overflow-x-auto italic">
+{`[
+  {
+    "id": "1",
+    "text_ar": "Example",
+    "text_am": "muiaia\u1d43Nsriaxum",
+    "created_at": "2026-03-08"
+  }
+]`}
+                  </div>
+                </div>
+
+                {/* Hub ADD */}
+                <div className="bg-app-bg rounded-2xl p-4 border border-border">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="px-2 py-1 rounded-lg bg-indigo-500 text-white text-[10px] font-bold">POST</span>
+                    <code className="text-xs text-indigo-500 font-bold">/api/hub-add</code>
+                  </div>
+                  <p className="text-[10px] text-text-muted mb-4 uppercase font-bold tracking-tight">Add a new post with syntax validation.</p>
+
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center justify-between p-2 bg-card-bg rounded-lg border border-border">
+                       <span className="text-[10px] font-bold text-text-main uppercase">text_am</span>
+                       <span className="text-[9px] text-text-muted italic">Required</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-900 text-indigo-300 p-4 rounded-2xl font-mono text-[10px] overflow-x-auto italic">
+{`{
+  "success": true,
+  "id": 123,
+  "validated": true,
+  "errors": []
 }`}
                   </div>
                 </div>

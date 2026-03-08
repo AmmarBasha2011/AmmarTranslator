@@ -12,7 +12,26 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const { text_am, text_ar, force } = JSON.parse(event.body || '{}');
+    let body = event.body || '{}';
+    if (event.isBase64Encoded) {
+      body = Buffer.from(body, 'base64').toString('utf8');
+    }
+
+    let parsedBody;
+    try {
+      parsedBody = JSON.parse(body);
+    } catch (e) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: 'INVALID_JSON',
+          message: 'Failed to parse request body as JSON.',
+          details: body.substring(0, 100)
+        }),
+      };
+    }
+
+    const { text_am, text_ar, force } = parsedBody;
 
     if (!text_am) {
       return {

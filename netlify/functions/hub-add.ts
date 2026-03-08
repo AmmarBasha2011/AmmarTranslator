@@ -1,5 +1,10 @@
 import { Handler } from '@netlify/functions';
+import { createClient } from '@supabase/supabase-js';
 import { validateAmmarInput } from '../../src/services/validator';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -7,7 +12,7 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const { text_am, text_ar } = JSON.parse(event.body || '{}');
+    const { text_am, text_ar, force } = JSON.parse(event.body || '{}');
 
     if (!text_am) {
       return {
@@ -18,48 +23,36 @@ export const handler: Handler = async (event) => {
 
     // Server-side validation
     const errors = validateAmmarInput(text_am);
-    // Note: We still allow posting if the user confirmed on the frontend,
-    // but the API could enforce a stricter policy if needed.
-    // For now, let's just log or include validation status.
     const isValid = errors.length === 0;
 
-    const targetUrl = `http://ammrhubapi.inexteamhost.dpdns.org/index.php?action=add&text_ar=${encodeURIComponent(text_ar || 'From User')}&text_am=${encodeURIComponent(text_am)}`;
-
-    const response = await fetch(targetUrl, {
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
-      }
-    });
-
-    if (!response.ok) {
-       throw new Error(`External API responded with status: ${response.status}`);
-    }
-
-    const text = await response.text();
-
-    // Check for Anti-Bot protection
-    if (text.includes('__test') && text.includes('slowAES')) {
+    if (!isValid && !force) {
       return {
-        statusCode: 503,
+        statusCode: 400,
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          error: 'API_BOT_PROTECTED',
-          message: 'The Hub API host has bot protection enabled. Server-side submission is blocked.',
+          success: false,
+          error: 'SYNTAX_ERROR',
+          message: 'Ammar Language syntax validation failed.',
+          errors: errors.map(e => e.message)
         }),
       };
     }
 
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      console.error('Failed to parse JSON. Response body:', text);
-      throw new Error(`Invalid JSON response from API. Start of body: ${text.substring(0, 100)}`);
-    }
+    const { data, error } = await supabase
+      .from('posts')
+      .insert([
+        {
+          text_am,
+          text_ar: text_ar || 'From User',
+          created_at: new Date().toISOString()
+        }
+      ])
+      .select();
+
+    if (error) throw error;
 
     return {
       statusCode: 200,
@@ -68,17 +61,20 @@ export const handler: Handler = async (event) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        success: data.success || data.sucsess,
-        ...data,
+        success: true,
+        id: data[0]?.id,
         validated: isValid,
         errors: errors.map(e => e.message)
       }),
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Hub Add Error:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' }),
+      body: JSON.stringify({
+        error: 'Failed to add hub post to Supabase',
+        details: error.message
+      }),
     };
   }
 };

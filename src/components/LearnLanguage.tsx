@@ -402,7 +402,7 @@ export default function LearnLanguage({ uiLang = 'en' }: LearnLanguageProps) {
                     <span className="px-2 py-1 rounded-lg bg-primary text-white text-[10px] font-bold">GET</span>
                     <code className="text-xs text-primary font-bold">/hub-get</code>
                   </div>
-                  <p className="text-[10px] text-text-muted mb-4 uppercase font-bold tracking-tight">Retrieve all posts from the Hub.</p>
+                  <p className="text-[10px] text-text-muted mb-4 uppercase font-bold tracking-tight">Retrieve all posts from the Hub (Powered by Supabase).</p>
                   <div className="bg-slate-900 text-green-400 p-4 rounded-2xl font-mono text-[10px] overflow-x-auto italic">
 {`[
   {

@@ -45,16 +45,8 @@ export default function Hub({ uiLang, onTranslate }: HubProps) {
       const response = await fetch('/hub-get');
       const data = await response.json();
 
-      if (data.error === 'API_BOT_PROTECTED') {
-        setStatus({
-          type: 'error',
-          message: 'The Hub database is currently protected by a security challenge. Automated access is temporarily blocked by the hosting provider.'
-        });
-        return;
-      }
-
       if (!Array.isArray(data)) {
-        throw new Error('Unexpected API response format');
+        throw new Error(data.details || 'Unexpected API response format');
       }
 
       // Decode Unicode in response
@@ -65,7 +57,7 @@ export default function Hub({ uiLang, onTranslate }: HubProps) {
       }));
 
       setPosts(decodedData);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch posts:', error);
       setStatus({ type: 'error', message: 'Connection to Hub failed. Please try again later.' });
     } finally {
@@ -88,7 +80,7 @@ export default function Hub({ uiLang, onTranslate }: HubProps) {
       const response = await fetch(`/hub-add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text_am: newPostText, text_ar: 'From User' })
+        body: JSON.stringify({ text_am: newPostText, text_ar: 'From User', force })
       });
       const data = await response.json();
       if (data.success || data.sucsess) {

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutGrid, Plus, Send, AlertCircle, CheckCircle2, Languages, Loader2 } from 'lucide-react';
+import { LayoutGrid, Plus, Send, AlertCircle, CheckCircle2, Languages, Loader2, RefreshCw } from 'lucide-react';
 import { Language, getTranslation } from '../lib/i18n';
 import { validateAmmarInput, ValidationError } from '../services/validator';
 import { cn } from '../lib/utils';
@@ -42,7 +42,7 @@ export default function Hub({ uiLang, onTranslate }: HubProps) {
   const fetchPosts = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/hub-get');
+      const response = await fetch('/hub-get', { cache: 'no-store' });
       const data = await response.json();
 
       if (data.error === 'TABLE_NOT_FOUND') {
@@ -114,15 +114,25 @@ export default function Hub({ uiLang, onTranslate }: HubProps) {
           <h2 className="text-xl font-bold text-text-main">{t('hub.title')}</h2>
           <p className="text-xs text-text-muted">{t('hub.subtitle')}</p>
         </div>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className={cn(
-            "p-3 rounded-2xl transition-all shadow-lg active:scale-95",
-            showAddForm ? "bg-red-500 text-white shadow-red-500/20" : "bg-primary text-white shadow-primary/20"
-          )}
-        >
-          <Plus className={cn("transition-transform duration-300", showAddForm && "rotate-45")} size={24} />
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={fetchPosts}
+            disabled={isLoading}
+            className="p-3 rounded-2xl bg-app-bg border border-border text-text-muted hover:text-primary hover:border-primary/30 transition-all active:scale-95 disabled:opacity-50"
+            title="Refresh"
+          >
+            <RefreshCw className={cn(isLoading && "animate-spin")} size={20} />
+          </button>
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className={cn(
+              "p-3 rounded-2xl transition-all shadow-lg active:scale-95",
+              showAddForm ? "bg-red-500 text-white shadow-red-500/20" : "bg-primary text-white shadow-primary/20"
+            )}
+          >
+            <Plus className={cn("transition-transform duration-300", showAddForm && "rotate-45")} size={24} />
+          </button>
+        </div>
       </div>
 
       {/* Add Form */}

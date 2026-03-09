@@ -17,123 +17,103 @@ export default function App() {
   const t = (key: string) => getTranslation(key, uiLang);
 
   return (
-    <div className="min-h-screen bg-app-bg text-text-main flex flex-col font-sans pb-24 sm:pb-0 transition-colors duration-300" dir={uiLang === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-app-bg text-text-main flex flex-col font-sans pb-24 sm:pb-0 transition-colors duration-300 overflow-hidden" dir={uiLang === 'ar' ? 'rtl' : 'ltr'}>
       
-      {/* Subtle Background Elements */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-primary/5 to-transparent" />
+      {/* Deep Dark Background Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary/10 rounded-full blur-[100px]" />
+        <div className="absolute top-1/2 -right-24 w-80 h-80 bg-secondary/10 rounded-full blur-[100px]" />
+        <div className="absolute bottom-0 left-1/4 w-full h-64 bg-gradient-to-t from-primary/5 to-transparent" />
       </div>
 
       {/* Header */}
-      <header className="relative z-10 w-full p-4 flex items-center justify-between bg-card-bg/80 backdrop-blur-md border-b border-border sticky top-0 transition-colors">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20">
-            <span className="text-xl font-bold text-white">A</span>
+      <header className="relative z-30 w-full p-4 flex items-center justify-between bg-app-bg/40 backdrop-blur-xl border-b border-white/5 sticky top-0 transition-colors">
+        <div className="flex items-center gap-4 group cursor-pointer">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] group-hover:scale-110 transition-transform duration-500">
+            <span className="text-2xl font-black text-white italic">A</span>
           </div>
           <div className="hidden sm:block">
-            <h1 className="text-lg font-bold tracking-tight text-text-main">{t('header.title')}</h1>
-            <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest">{t('header.subtitle')}</p>
+            <h1 className="text-xl font-black tracking-tighter text-white uppercase italic">{t('header.title')}</h1>
+            <p className="text-[9px] text-white/30 font-black uppercase tracking-[0.4em]">{t('header.subtitle')}</p>
           </div>
         </div>
 
-        {/* Desktop Navigation */}
-        <div className="hidden sm:flex items-center bg-app-bg p-1 rounded-xl border border-border">
-          <button
-            onClick={() => setActiveTab('translator')}
-            className={cn(
-              "flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all",
-              activeTab === 'translator'
-                ? "bg-card-bg text-primary shadow-sm"
-                : "text-text-muted hover:text-text-main"
-            )}
-          >
-            <Languages size={18} />
-            <span>{t('nav.translator').toUpperCase()}</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('hub')}
-            className={cn(
-              "flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all",
-              activeTab === 'hub'
-                ? "bg-card-bg text-primary shadow-sm"
-                : "text-text-muted hover:text-text-main"
-            )}
-          >
-            <LayoutGrid size={18} />
-            <span>{t('nav.hub').toUpperCase()}</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('learn')}
-            className={cn(
-              "flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all",
-              activeTab === 'learn'
-                ? "bg-card-bg text-secondary shadow-sm"
-                : "text-text-muted hover:text-text-main"
-            )}
-          >
-            <BookOpen size={18} />
-            <span>{t('nav.learn').toUpperCase()}</span>
-          </button>
-        </div>
+        {/* Navigation Wrapper */}
+        <div className="flex items-center gap-6">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center bg-white/5 p-1.5 rounded-2xl border border-white/10 backdrop-blur-md">
+            {[
+              { id: 'translator', icon: Languages, label: t('nav.translator'), color: 'text-primary' },
+              { id: 'hub', icon: LayoutGrid, label: t('nav.hub'), color: 'text-primary' },
+              { id: 'learn', icon: BookOpen, label: t('nav.learn'), color: 'text-secondary' },
+            ].map((nav) => (
+              <button
+                key={nav.id}
+                onClick={() => setActiveTab(nav.id as Tab)}
+                className={cn(
+                  "flex items-center gap-3 px-6 py-3 rounded-xl text-[10px] font-black transition-all duration-500 tracking-[0.2em] relative group/nav",
+                  activeTab === nav.id
+                    ? "text-white"
+                    : "text-white/30 hover:text-white/60"
+                )}
+              >
+                <nav.icon size={14} className={cn("transition-transform duration-500 group-hover/nav:scale-125", activeTab === nav.id ? nav.color : "")} />
+                <span>{nav.label.toUpperCase()}</span>
+                {activeTab === nav.id && (
+                  <motion.div
+                    layoutId="active-pill-desktop"
+                    className="absolute inset-0 bg-white/10 border border-white/10 rounded-xl -z-10 shadow-[0_0_20px_rgba(59,130,246,0.1)]"
+                  />
+                )}
+              </button>
+            ))}
+          </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2">
-          <div className="relative group">
-            <button className="flex items-center gap-1.5 p-2.5 rounded-xl bg-app-bg border border-border text-text-muted hover:text-primary transition-all">
-              <Globe size={18} />
-              <span className="text-xs font-bold uppercase">{uiLang}</span>
-            </button>
-            <div className="absolute right-0 mt-2 w-32 bg-card-bg border border-border rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
-              {(['en', 'ar', 'am'] as Language[]).map((lang) => (
-                <button
-                  key={lang}
-                  onClick={() => setUiLang(lang)}
-                  className={cn(
-                    "w-full px-4 py-2.5 text-left text-xs font-bold uppercase hover:bg-app-bg transition-colors",
-                    uiLang === lang ? "text-primary" : "text-text-muted"
-                  )}
-                >
-                  {lang === 'en' ? 'English' : lang === 'ar' ? 'العربية' : 'Ammar'}
-                </button>
-              ))}
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <div className="relative group">
+              <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white transition-all backdrop-blur-md">
+                <Globe size={16} />
+                <span className="text-xs font-black uppercase tracking-widest">{uiLang}</span>
+              </button>
+              <div className="absolute right-0 mt-2 w-40 bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden translate-y-2 group-hover:translate-y-0">
+                {(['en', 'ar', 'am'] as Language[]).map((lang) => (
+                  <button
+                    key={lang}
+                    onClick={() => setUiLang(lang)}
+                    className={cn(
+                      "w-full px-5 py-3.5 text-left text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-colors flex items-center justify-between",
+                      uiLang === lang ? "text-primary" : "text-white/40"
+                    )}
+                  >
+                    <span>{lang === 'en' ? 'English' : lang === 'ar' ? 'العربية' : 'Ammar'}</span>
+                    {uiLang === lang && <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_#3b82f6]" />}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 flex-1 w-full max-w-4xl mx-auto p-4 sm:p-8">
+      <main className="relative z-10 flex-1 w-full max-w-6xl mx-auto p-4 md:p-12 overflow-y-auto no-scrollbar">
         <AnimatePresence mode="wait">
-          {activeTab === 'translator' && (
-            <motion.div 
-              key="translator"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="w-full"
-            >
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, x: 10, filter: 'blur(4px)' }}
+            animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, x: -10, filter: 'blur(4px)' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 150 }}
+            className="w-full h-full"
+          >
+            {activeTab === 'translator' && (
               <TranslatorView uiLang={uiLang} prefill={prefilledAmmar} onClearPrefill={() => setPrefilledAmmar('')} />
-            </motion.div>
-          )}
-          {activeTab === 'learn' && (
-            <motion.div
-              key="learn"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="w-full"
-            >
+            )}
+            {activeTab === 'learn' && (
               <LearnLanguage uiLang={uiLang} />
-            </motion.div>
-          )}
-          {activeTab === 'hub' && (
-            <motion.div
-              key="hub"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="w-full"
-            >
+            )}
+            {activeTab === 'hub' && (
               <Hub
                 uiLang={uiLang}
                 onTranslate={(text) => {
@@ -141,52 +121,39 @@ export default function App() {
                   setActiveTab('translator');
                 }}
               />
-            </motion.div>
-          )}
+            )}
+          </motion.div>
         </AnimatePresence>
       </main>
 
       {/* Bottom Navigation (Mobile) */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card-bg/80 backdrop-blur-lg border-t border-border p-2 sm:hidden z-50 mobile-nav transition-colors">
-        <div className="flex justify-around items-center max-w-md mx-auto">
-          <button
-            onClick={() => setActiveTab('translator')}
-            className={cn(
-              "flex flex-col items-center gap-1 p-2 rounded-xl transition-all w-full",
-              activeTab === 'translator'
-                ? "text-primary bg-primary/5"
-                : "text-text-muted"
-            )}
-          >
-            <Languages size={24} />
-            <span className="text-[10px] font-bold uppercase tracking-tight">{t('nav.translator')}</span>
-          </button>
-          
-          <button
-            onClick={() => setActiveTab('hub')}
-            className={cn(
-              "flex flex-col items-center gap-1 p-2 rounded-xl transition-all w-full",
-              activeTab === 'hub'
-                ? "text-primary bg-primary/5"
-                : "text-text-muted"
-            )}
-          >
-            <LayoutGrid size={24} />
-            <span className="text-[10px] font-bold uppercase tracking-tight">{t('nav.hub')}</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('learn')}
-            className={cn(
-              "flex flex-col items-center gap-1 p-2 rounded-xl transition-all w-full",
-              activeTab === 'learn'
-                ? "text-secondary bg-secondary/5"
-                : "text-text-muted"
-            )}
-          >
-            <BookOpen size={24} />
-            <span className="text-[10px] font-bold uppercase tracking-tight">{t('nav.learn')}</span>
-          </button>
+      <nav className="fixed bottom-4 left-4 right-4 bg-slate-900/60 backdrop-blur-2xl border border-white/10 rounded-3xl p-3 md:hidden z-50 transition-all shadow-2xl">
+        <div className="flex justify-around items-center max-w-md mx-auto gap-2">
+          {[
+            { id: 'translator', icon: Languages, label: t('nav.translator'), color: 'text-primary' },
+            { id: 'hub', icon: LayoutGrid, label: t('nav.hub'), color: 'text-primary' },
+            { id: 'learn', icon: BookOpen, label: t('nav.learn'), color: 'text-secondary' },
+          ].map((nav) => (
+            <button
+              key={nav.id}
+              onClick={() => setActiveTab(nav.id as Tab)}
+              className={cn(
+                "flex flex-col items-center gap-1.5 p-3 rounded-2xl transition-all w-full relative",
+                activeTab === nav.id
+                  ? "bg-white/10"
+                  : "text-white/40"
+              )}
+            >
+              <nav.icon size={22} className={activeTab === nav.id ? nav.color : ""} />
+              <span className="text-[9px] font-black uppercase tracking-widest">{nav.label}</span>
+              {activeTab === nav.id && (
+                <motion.div
+                  layoutId="active-pill"
+                  className="absolute inset-0 border border-white/20 rounded-2xl shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]"
+                />
+              )}
+            </button>
+          ))}
         </div>
       </nav>
 

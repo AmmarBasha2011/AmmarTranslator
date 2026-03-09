@@ -69,10 +69,10 @@ export default function LearnLanguage({ uiLang = 'en' }: LearnLanguageProps) {
   ];
 
   return (
-    <div className="w-full space-y-6 pb-20">
+    <div className="w-full space-y-10 pb-32 max-w-4xl mx-auto">
       
       {/* Tab Switcher */}
-      <div className="flex bg-card-bg p-1 rounded-xl border border-border shadow-sm sticky top-20 z-20 overflow-x-auto no-scrollbar" dir="ltr">
+      <div className="flex bg-white/5 p-2 rounded-2xl border border-white/10 backdrop-blur-xl sticky top-24 z-20 overflow-x-auto no-scrollbar shadow-2xl" dir="ltr">
         <button
           onClick={() => setActiveTab('guide')}
           className={cn(
@@ -109,24 +109,23 @@ export default function LearnLanguage({ uiLang = 'en' }: LearnLanguageProps) {
         {activeTab === 'guide' && (
           <motion.div
             key="guide"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="space-y-6"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="space-y-10"
           >
             {/* Introduction */}
-            <section className="bg-card-bg p-6 rounded-3xl border border-border shadow-sm space-y-3">
-              <h2 className="text-2xl font-bold text-text-main tracking-tight">The Ammar Protocol</h2>
-              <p className="text-sm text-text-muted leading-relaxed">
+            <section className="bg-white/5 p-10 rounded-[2.5rem] border border-white/10 backdrop-blur-xl shadow-2xl space-y-6">
+              <h2 className="text-4xl font-black text-white tracking-tighter">The Ammar Protocol</h2>
+              <p className="text-lg text-white/60 leading-relaxed font-medium">
                 The Ammar Language is a neural construct based on geometric modification of Latin phonemes. It utilizes specific operations to transform base logic into complex Arabic semantic structures.
               </p>
             </section>
 
             {/* Protocol Stack */}
-            <section className="bg-card-bg rounded-3xl border border-border shadow-sm overflow-hidden">
-              <div className="p-5 border-b border-border bg-app-bg/50 flex items-center gap-3">
-                <Cpu size={18} className="text-primary" />
-                <h3 className="font-bold text-sm uppercase tracking-wider">Neural Logic Stack</h3>
+            <section className="bg-white/5 rounded-[2.5rem] border border-white/10 backdrop-blur-xl shadow-2xl overflow-hidden">
+              <div className="p-8 border-b border-white/5 bg-white/5 flex items-center gap-4">
+                <Cpu size={24} className="text-primary" />
+                <h3 className="font-black text-xs uppercase tracking-[0.3em] text-white/40">Neural Logic Stack</h3>
               </div>
               <div className="p-5 space-y-6">
                 {[

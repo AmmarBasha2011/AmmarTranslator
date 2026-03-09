@@ -33,6 +33,10 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'learn.guide': 'Guide',
     'learn.matrix': 'Matrix',
     'learn.api': 'API',
+    'hub.refresh': 'Refresh',
+    'hub.fix_errors': 'Fix Errors',
+    'hub.post_anyway': 'Post Anyway',
+    'hub.created_at': 'Created at',
   },
   ar: {
     'nav.translator': 'المترجم',
@@ -63,9 +67,24 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'learn.guide': 'الدليل',
     'learn.matrix': 'المصفوفة',
     'learn.api': 'API',
+    'hub.refresh': 'تحديث',
+    'hub.fix_errors': 'إصلاح الأخطاء',
+    'hub.post_anyway': 'نشر على أي حال',
+    'hub.created_at': 'أنشئ في',
   },
   am: {
-    // These will be dynamically populated or fall back to translated Arabic
+    'nav.translator': 'muNirMTLari',
+    'nav.hub': 'muNMlo',
+    'nav.learn': 'muTMlo',
+    'header.title': 'muMLaT\u0331Lloum V2',
+    'header.subtitle': 'muNakri muaf\u0331Laa\u1d43rium',
+    'common.processing': 'mugwrH\u0331Lawrium...',
+    'common.copy': 'muNakri',
+    'common.copied': 'muTNaklo',
+    'common.save': 'muHfTaHri',
+    'common.listen': 'muLis\u0336\u030aafTloaxum',
+    'common.clear': 'muof\u0331LH\u0305loum',
+    'common.translate': 'muNirMTLari',
   }
 };
 

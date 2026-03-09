@@ -55,14 +55,34 @@ export default function Hub({ uiLang, onTranslate }: HubProps) {
         throw new Error(data.details || 'Unexpected API response format');
       }
 
-      // Decode Unicode in response
+      // Decode and Deduplicate
+      const seen = new Set();
       const decodedData = data.map((post: any) => ({
         ...post,
         text_ar: decodeUnicode(post.text_ar || ''),
         text_am: decodeUnicode(post.text_am || '')
-      }));
+      })).filter(post => {
+        const isDuplicate = seen.has(post.text_am);
+        seen.add(post.text_am);
+        return !isDuplicate;
+      });
 
-      setPosts(decodedData);
+      // Caching logic
+      const cachedPosts = JSON.parse(localStorage.getItem('ammar_hub_cache') || '[]');
+      const combinedPosts = [...decodedData];
+
+      // Merge with cache for posts not returned by the server this time
+      cachedPosts.forEach((cp: any) => {
+        if (!seen.has(cp.text_am)) {
+           combinedPosts.push(cp);
+        }
+      });
+
+      // Sort by date again just in case
+      combinedPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setPosts(combinedPosts);
+      localStorage.setItem('ammar_hub_cache', JSON.stringify(combinedPosts));
     } catch (error: any) {
       console.error('Failed to fetch posts:', error);
       setStatus({ type: 'error', message: 'Connection to Hub failed. Please try again later.' });
@@ -107,19 +127,19 @@ export default function Hub({ uiLang, onTranslate }: HubProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-4xl mx-auto">
       {/* Header & Add Button */}
-      <div className="flex items-center justify-between bg-card-bg p-4 rounded-3xl border border-border shadow-sm">
+      <div className="flex items-center justify-between bg-white/5 p-6 rounded-[2rem] border border-white/10 backdrop-blur-xl shadow-2xl">
         <div>
-          <h2 className="text-xl font-bold text-text-main">{t('hub.title')}</h2>
-          <p className="text-xs text-text-muted">{t('hub.subtitle')}</p>
+          <h2 className="text-2xl font-black text-white tracking-tight">{t('hub.title')}</h2>
+          <p className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-black">{t('hub.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={fetchPosts}
             disabled={isLoading}
             className="p-3 rounded-2xl bg-app-bg border border-border text-text-muted hover:text-primary hover:border-primary/30 transition-all active:scale-95 disabled:opacity-50"
-            title="Refresh"
+            title={t('hub.refresh')}
           >
             <RefreshCw className={cn(isLoading && "animate-spin")} size={20} />
           </button>
@@ -144,12 +164,12 @@ export default function Hub({ uiLang, onTranslate }: HubProps) {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="bg-card-bg p-5 rounded-3xl border border-border shadow-sm space-y-4 mb-6">
+            <div className="bg-white/5 p-8 rounded-[2rem] border border-white/10 backdrop-blur-3xl shadow-2xl space-y-6 mb-8">
               <textarea
                 value={newPostText}
                 onChange={(e) => setNewPostText(e.target.value)}
                 placeholder={t('hub.post_placeholder')}
-                className="w-full h-32 p-4 bg-app-bg rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none font-medium"
+                className="w-full h-40 p-6 bg-black/20 rounded-2xl border border-white/5 focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all resize-none font-black text-white placeholder:text-white/10"
               />
 
               {showConfirm && (
@@ -168,13 +188,13 @@ export default function Hub({ uiLang, onTranslate }: HubProps) {
                       onClick={() => handlePostSubmit(true)}
                       className="flex-1 bg-amber-500 text-white py-2 rounded-xl text-xs font-bold hover:bg-amber-600 transition-colors"
                     >
-                      Post Anyway
+                      {t('hub.post_anyway')}
                     </button>
                     <button
                       onClick={() => { setShowConfirm(false); setValidationErrors([]); }}
                       className="flex-1 bg-white dark:bg-slate-800 text-slate-600 py-2 rounded-xl text-xs font-bold border border-border transition-colors"
                     >
-                      Fix Errors
+                      {t('hub.fix_errors')}
                     </button>
                   </div>
                 </div>
@@ -213,49 +233,69 @@ export default function Hub({ uiLang, onTranslate }: HubProps) {
       </AnimatePresence>
 
       {/* Posts List */}
-      <div className="space-y-4">
-        {isLoading ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-4 text-text-muted">
-            <Loader2 className="animate-spin text-primary" size={40} />
-            <span className="text-xs font-bold uppercase tracking-widest">{t('common.processing')}</span>
+      <motion.div
+        layout
+        className="space-y-6"
+      >
+        {isLoading && posts.length === 0 ? (
+          <div className="py-32 flex flex-col items-center justify-center gap-6 text-text-muted">
+            <div className="relative">
+              <Loader2 className="animate-spin text-primary/40" size={60} />
+              <Loader2 className="animate-spin text-primary absolute inset-0" size={60} style={{ animationDirection: 'reverse', opacity: 0.5 }} />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] animate-pulse">{t('common.processing')}</span>
           </div>
         ) : posts.length === 0 ? (
-          <div className="bg-card-bg p-12 rounded-3xl border border-border text-center">
-            <LayoutGrid size={48} className="mx-auto text-text-muted/20 mb-4" />
-            <p className="text-text-muted font-bold">{t('hub.empty')}</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="bg-white/5 p-20 rounded-[3rem] border border-white/10 text-center backdrop-blur-xl"
+          >
+            <LayoutGrid size={80} className="mx-auto text-white/5 mb-6" />
+            <p className="text-white/20 font-black uppercase tracking-widest">{t('hub.empty')}</p>
+          </motion.div>
         ) : (
-          posts.map((post) => (
-            <motion.div
-              layout
-              key={post.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-card-bg p-5 rounded-3xl border border-border shadow-sm group hover:border-primary/30 transition-all"
-            >
-              <div className="space-y-4">
-                <p className="text-lg font-bold leading-relaxed text-text-main" dir="auto">
-                  {post.text_am}
-                </p>
+          <AnimatePresence mode='popLayout'>
+            {posts.map((post, index) => (
+              <motion.div
+                layout
+                key={post.id}
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
+                transition={{
+                  duration: 0.5,
+                  delay: index * 0.05,
+                  type: 'spring',
+                  stiffness: 100
+                }}
+                whileHover={{ y: -5, scale: 1.01, backgroundColor: 'rgba(255,255,255,0.08)' }}
+                className="bg-white/5 p-8 sm:p-12 rounded-[2.5rem] border border-white/10 shadow-2xl group transition-all backdrop-blur-3xl relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-[50px] -z-10 group-hover:bg-primary/10 transition-colors" />
+                <div className="space-y-8">
+                  <p className="text-2xl sm:text-3xl font-black leading-relaxed text-white tracking-tighter" dir="auto">
+                    {post.text_am}
+                  </p>
 
-                <div className="flex items-center justify-between pt-4 border-t border-border">
-                  <span className="text-[10px] font-bold text-text-muted uppercase tracking-tighter">
-                    {new Date(post.created_at).toLocaleDateString()}
-                  </span>
+                  <div className="flex flex-col sm:flex-row gap-4 sm:items-center justify-between pt-8 border-t border-white/5">
+                    <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+                      {t('hub.created_at')}: {new Date(post.created_at).toLocaleDateString()}
+                    </span>
 
-                  <button
-                    onClick={() => onTranslate?.(post.text_am)}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary/5 hover:bg-primary text-primary hover:text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
-                  >
-                    <Languages size={14} />
-                    {t('common.translate')}
-                  </button>
+                    <button
+                      onClick={() => onTranslate?.(post.text_am)}
+                      className="flex items-center justify-center gap-3 px-6 py-3 bg-primary text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] active:scale-95"
+                    >
+                      <Languages size={16} />
+                      {t('common.translate')}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))
+              </motion.div>
+            ))}
+          </AnimatePresence>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

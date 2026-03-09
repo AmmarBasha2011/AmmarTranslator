@@ -179,14 +179,14 @@ export default function TranslatorView({ uiLang = 'en', prefill, onClearPrefill 
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6 max-w-3xl mx-auto">
 
       {/* Language Selection Grid */}
-      <div className="grid grid-cols-[1fr,auto,1fr] items-center gap-2 bg-white p-2 rounded-2xl border border-border shadow-sm">
+      <div className="grid grid-cols-[1fr,auto,1fr] items-center gap-3 bg-white/5 p-2 rounded-3xl border border-white/10 backdrop-blur-xl shadow-2xl">
         <select
           value={fromLang}
           onChange={(e) => setFromLang(e.target.value as any)}
-          className="w-full bg-app-bg text-sm font-bold text-primary p-3 rounded-xl appearance-none focus:outline-none transition-all"
+          className="w-full bg-white/5 text-sm font-black text-primary p-4 rounded-2xl appearance-none focus:outline-none transition-all border border-white/5 hover:bg-white/10"
         >
           {LANGUAGES.map(lang => (
             <option key={lang.code} value={lang.code}>
@@ -205,7 +205,7 @@ export default function TranslatorView({ uiLang = 'en', prefill, onClearPrefill 
         <select
           value={toLang}
           onChange={(e) => setToLang(e.target.value as any)}
-          className="w-full bg-app-bg text-sm font-bold text-secondary p-3 rounded-xl appearance-none focus:outline-none transition-all text-right"
+          className="w-full bg-white/5 text-sm font-black text-secondary p-4 rounded-2xl appearance-none focus:outline-none transition-all text-right border border-white/5 hover:bg-white/10"
         >
           {LANGUAGES.map(lang => (
             <option key={lang.code} value={lang.code}>
@@ -216,16 +216,16 @@ export default function TranslatorView({ uiLang = 'en', prefill, onClearPrefill 
       </div>
 
       {/* Input Card */}
-      <div className="relative bg-card-bg rounded-3xl border border-border shadow-sm overflow-hidden flex flex-col group transition-all focus-within:ring-2 focus-within:ring-primary/20">
+      <div className="relative bg-white/5 rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden flex flex-col group transition-all focus-within:ring-4 focus-within:ring-primary/20 backdrop-blur-xl">
         <textarea
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           placeholder={t('translator.placeholder')}
-          className="w-full h-40 sm:h-56 p-5 text-lg resize-none focus:outline-none placeholder:text-text-muted font-medium leading-relaxed bg-transparent"
+          className="w-full h-48 sm:h-64 p-8 text-2xl resize-none focus:outline-none placeholder:text-white/20 font-black leading-relaxed bg-transparent text-white"
           dir="auto"
         />
 
-        <div className="flex items-center justify-between p-3 bg-app-bg/50 border-t border-border">
+        <div className="flex items-center justify-between px-6 py-4 bg-black/20 border-t border-white/5">
           <div className="flex gap-2">
             <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".pdf,.txt,.md" />
             <button
@@ -307,18 +307,18 @@ export default function TranslatorView({ uiLang = 'en', prefill, onClearPrefill 
       </AnimatePresence>
 
       {/* Output Card */}
-      <div className="relative bg-card-bg rounded-3xl border border-border shadow-md overflow-hidden flex flex-col min-h-[140px]">
-        <div className="flex-1 p-5">
+      <div className="relative bg-gradient-to-br from-white/10 to-white/5 rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden flex flex-col min-h-[180px] backdrop-blur-3xl">
+        <div className="flex-1 p-8">
           {isTranslating ? (
             <div className="flex flex-col items-center justify-center h-full gap-3 py-6">
               <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
               <span className="text-[10px] font-bold text-primary tracking-widest uppercase">{t('common.processing')}</span>
             </div>
           ) : outputText ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <motion.p
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="text-xl font-bold leading-relaxed text-text-main"
+                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                className="text-3xl font-black leading-relaxed text-white tracking-tight"
                 dir="auto"
               >
                 {outputText}
@@ -326,12 +326,12 @@ export default function TranslatorView({ uiLang = 'en', prefill, onClearPrefill 
 
               {pronunciation && (
                 <motion.div
-                  initial={{ opacity: 0, y: 5 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="pt-3 border-t border-border"
+                  className="pt-6 border-t border-white/5"
                 >
-                  <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest block mb-1">{t('translator.pronunciation')}</span>
-                  <p className="text-lg font-bold text-primary/70" dir="rtl">
+                  <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] block mb-2">{t('translator.pronunciation')}</span>
+                  <p className="text-2xl font-black text-primary" dir="rtl">
                     {pronunciation}
                   </p>
                 </motion.div>
@@ -346,7 +346,7 @@ export default function TranslatorView({ uiLang = 'en', prefill, onClearPrefill 
         </div>
 
         {outputText && (
-          <div className="bg-app-bg/50 p-3 flex justify-between items-center border-t border-border">
+          <div className="bg-black/20 px-6 py-4 flex justify-between items-center border-t border-white/5">
             <div className="flex gap-1.5" dir="ltr">
               <button
                 onClick={handleOutputTTS}

@@ -13,15 +13,26 @@ const MY_MEMORY_LANGS: Record<string, string> = {
 
 async function myMemoryTranslate(text: string, from: string, to: string): Promise<string> {
   const langpair = `${from}|${to}`;
+  // Ensure parameters are encoded to prevent injection
   const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(langpair)}`;
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+        headers: {
+            'User-Agent': 'AmmarTranslator/1.0'
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const data = await response.json();
     if (data.responseStatus === 200) {
       return data.responseData.translatedText;
     }
-    throw new Error(data.responseDetails || 'MyMemory translation failed');
+    // Don't leak full error details to client in production
+    throw new Error('MyMemory translation failed');
   } catch (error) {
     console.error('MyMemory API error:', error);
     return '';
@@ -30,6 +41,12 @@ async function myMemoryTranslate(text: string, from: string, to: string): Promis
 
 export async function translate(text: string, from: SupportedLanguage, to: SupportedLanguage): Promise<string> {
   if (from === to) return text;
+
+  // Validation of languages
+  const validLangs = ['en', 'ar', 'am', 'fr', 'tr', 'de', 'es'];
+  if (!validLangs.includes(from) || !validLangs.includes(to)) {
+    throw new Error('Unsupported language');
+  }
 
   // Case 1: Arabic <-> Ammar
   if (from === 'ar' && to === 'am') {

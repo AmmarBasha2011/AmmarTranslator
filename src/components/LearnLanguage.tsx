@@ -394,7 +394,7 @@ export default function LearnLanguage() {
                   <div className="bg-black/40 rounded-3xl border border-white/5 p-8">
                     <h4 className="text-[10px] font-black text-white uppercase tracking-widest mb-6">Execution Signal</h4>
                     <div className="bg-deep-space p-6 rounded-2xl font-mono text-xs text-muted-grey border border-white/5 overflow-x-auto whitespace-pre italic">
-                      {`curl "https://ammartranslator.netlify.app/api/translate?text=Hello&from=en&to=am"`}
+                      {`curl "/api/translate?text=Hello&from=en&to=am"`}
                     </div>
                   </div>
 

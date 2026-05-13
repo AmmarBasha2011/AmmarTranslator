@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { createServer as createViteServer } from 'vite';
 import { translate } from './src/services/translationService';
 import { SupportedLanguage } from './src/services/translationService';
 import 'dotenv/config';
@@ -18,23 +17,21 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Needed for Vite/React
+      "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
       "img-src": ["'self'", "data:", "https:"],
       "connect-src": ["'self'", "https://api.mymemory.translated.net"]
     },
   },
 }));
 
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? false : true // Restrict CORS in production or set to specific domain
-}));
+app.use(cors());
 
-app.use(express.json({ limit: '10kb' })); // Limit body size to prevent DoS
+app.use(express.json({ limit: '10kb' }));
 
 // Rate Limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -44,7 +41,6 @@ app.use('/api/', limiter);
 app.get('/api/translate', async (req, res) => {
   const { text, from, to } = req.query;
 
-  // Input Validation & Sanitization (Vulnerability Fix 4 & 5)
   if (!text || typeof text !== 'string' || !from || !to) {
     return res.status(400).json({ error: 'Missing parameters. text, from, and to are required.' });
   }
@@ -56,8 +52,6 @@ app.get('/api/translate', async (req, res) => {
   try {
     const source = (from as string).toLowerCase() as SupportedLanguage;
     const target = (to as string).toLowerCase() as SupportedLanguage;
-
-    // Basic sanitization
     const sanitizedText = text.replace(/[<>]/g, '');
 
     const translated = await translate(sanitizedText, source, target);
@@ -74,9 +68,11 @@ app.get('/api/translate', async (req, res) => {
   }
 });
 
-// Vite Middleware
+// Server Middleware
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
+    // Dynamic import to avoid production dependency on vite
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
@@ -84,7 +80,8 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     // Serve static files in production
-    app.use(express.static(path.join(__dirname, 'dist'), {
+    // Since this file is in dist/server.js, __dirname IS dist.
+    app.use(express.static(__dirname, {
         setHeaders: (res, path) => {
             if (path.endsWith('.html')) {
                 res.setHeader('Cache-Control', 'no-cache');
@@ -93,11 +90,10 @@ async function startServer() {
     }));
     // Fallback for SPA
     app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+        res.sendFile(path.join(__dirname, 'index.html'));
     });
   }
 
-  // Bind to 0.0.0.0 for Hugging Face Spaces compatibility
   app.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
   });

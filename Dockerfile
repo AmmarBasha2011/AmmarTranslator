@@ -3,20 +3,20 @@ FROM node:18-slim
 # Create and set the working directory
 WORKDIR /app
 
-# Install dependencies needed for some node modules if necessary
-# RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
-
-# Copy package files
+# Copy package files first for better layer caching
 COPY package*.json ./
 
-# Install dependencies
+# Install all dependencies including dev for the build step
 RUN npm install
 
 # Copy the rest of the application code
 COPY . .
 
-# Build the frontend
+# Build the project (frontend + server)
 RUN npm run build
+
+# Prune dev dependencies after build to keep image small
+RUN npm prune --omit=dev
 
 # Set environment variables
 ENV NODE_ENV=production
@@ -29,5 +29,5 @@ USER user
 # Expose the port
 EXPOSE 7860
 
-# Start the server
-CMD ["npm", "start"]
+# Start the server using compiled JS
+CMD ["node", "dist/server.js"]

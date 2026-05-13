@@ -1,6 +1,6 @@
 {
-  "name": "Ammar Language Translator V5",
-  "description": "The ultimate Ammar Language suite. Features AI translation, smart validation, interactive learning tools (Flashcards, Quizzes), and speech capabilities.",
+  "name": "Ammar Language Translator V6",
+  "description": "Next-gen neural translation engine for the Ammar protocol. Optimized for performance and security.",
   "requestFramePermissions": [
     "microphone"
   ]
